@@ -151,3 +151,25 @@ class TestReferenceRelativeComparison:
         got = compare_case(results("dispersion", {"r_sd": 1.0, "np_std": 1.0}), spec)
         assert got[0].reference is None
         assert got[0].against_reference == {}
+
+
+class TestDiscovery:
+    def test_a_yaml_that_is_not_a_spec_is_skipped(self, tmp_path):
+        # kasauti's bug records live beside their cases as bug.yaml, in a root
+        # this function is handed. Treating every YAML as a spec broke it.
+        from milaan.loader import discover_cases
+
+        root = tmp_path / "bugs"
+        root.mkdir()
+        (root / "bug.yaml").write_text("id: r/pkg/1.0-thing\nseverity: HIGH\n")
+        assert discover_cases(root) == []
+
+    def test_a_misspelled_spec_is_reported_not_skipped(self, tmp_path):
+        # Silently dropping this would mean a comparison that quietly never runs.
+        from milaan.loader import discover_cases
+
+        root = tmp_path / "specs"
+        root.mkdir()
+        (root / "typo.yaml").write_text("id: x\nreference: r\nimplementaions: {}\n")
+        with pytest.raises(CaseError, match="declares no implementations"):
+            discover_cases(root)

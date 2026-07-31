@@ -287,6 +287,44 @@ def load_case(directory: Path) -> CaseSpec:
     )
 
 
+#: Keys that only a spec has. A root can hold YAML that is not a comparison at
+#: all -- kasauti's bug records live beside their cases as `bug.yaml` -- so
+#: discovery asks whether a file is spec-shaped before trying to parse it as one.
+SPEC_MARKERS = ("implementations", "reference", "finding")
+
+
+def _is_spec(path: Path) -> bool:
+    """Whether a YAML file is a comparison spec rather than something else.
+
+    Deliberately not "any YAML that is not a case.yaml": a spec root may hold
+    unrelated documents. But a file carrying *some* spec vocabulary and no
+    `implementations` is a spec with a mistake in it, and is reported rather
+    than skipped -- silently dropping a misspelled spec would mean a comparison
+    that quietly never runs.
+
+    Args:
+        path: Candidate file.
+
+    Returns:
+        True when the file should be parsed as a spec.
+
+    Raises:
+        CaseError: If the file looks like a spec but declares no
+            implementations.
+    """
+    try:
+        raw = yaml.safe_load(path.read_text()) or {}
+    except yaml.YAMLError as exc:
+        raise CaseError(f"{path}: not readable as YAML: {exc}") from exc
+    if not isinstance(raw, dict):
+        return False
+    if "implementations" in raw:
+        return True
+    if any(key in raw for key in SPEC_MARKERS):
+        raise CaseError(f"{path}: looks like a spec but declares no implementations")
+    return False
+
+
 def discover_cases(*roots: Path) -> list[CaseSpec]:
     """Find and parse every comparison under one or more root directories.
 
@@ -307,9 +345,9 @@ def discover_cases(*roots: Path) -> list[CaseSpec]:
         if not root.exists():
             continue
         cases.extend(load_case(p.parent) for p in sorted(root.rglob("case.yaml")))
-        cases.extend(
-            load_spec(p) for p in sorted(root.rglob("*.yaml")) if p.name != "case.yaml"
-        )
+        for path in sorted(root.rglob("*.yaml")):
+            if path.name != "case.yaml" and _is_spec(path):
+                cases.append(load_spec(path))
     return sorted(cases, key=lambda c: (c.family, c.id))
 
 
