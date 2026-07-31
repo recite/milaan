@@ -15,10 +15,12 @@ lint:  ## Lint
 	uv run ruff check src tests cases backends src/milaan/lib datasets
 
 types:  ## Type-check
-	uv run pyright
+	uv run python -m pyright
 
 test:  ## Unit tests (no subprocesses, no network)
-	uv run pytest
+	# `python -m` rather than the console script: a venv's entry-point
+	# shebang can be stale and silently select another interpreter.
+	uv run python -m pytest
 
 check: lint types test  ## Everything CI would run
 
