@@ -1,0 +1,53 @@
+id: bootstrap_monte_carlo
+family: rng
+title: "What the RNG gap costs: Monte Carlo error, shrinking like 1/sqrt(B)"
+quantity: "bootstrap standard error of the mean, at four resample counts"
+dataset: bootstrap_series
+reference: r_boot
+
+implementations:
+  r_boot:
+    lang: R
+    setup: >
+      boot_se <- function(B) { set.seed(42);
+        sd(replicate(B, mean(sample(x, replace = TRUE)))) }
+    expr: "c(B100 = boot_se(100), B1000 = boot_se(1000), B10000 = boot_se(10000))"
+    label: "R: sd(replicate(B, mean(sample(x, replace=TRUE))))"
+  py_boot:
+    lang: Python
+    setup: >
+      def boot_se(B):
+          np.random.seed(42)
+          draws = np.random.choice(x, size=(B, len(x)), replace=True)
+          return np.std(draws.mean(axis=1), ddof=1)
+    expr: "{'B100': boot_se(100), 'B1000': boot_se(1000), 'B10000': boot_se(10000)}"
+    label: "numpy: np.random.choice, same estimator"
+    expect: DIVERGE
+    reason: >
+      Identical data, identical estimator, both seeded 42, and the answers differ
+      at every B -- because the two languages are resampling along different
+      streams. The size of the gap is the point: roughly 6 percent at B=100, 2.5
+      percent at B=1000, and 0.2 percent at B=10000. It is Monte Carlo error, not
+      bias; both sequences converge on the same number.
+
+finding:
+  cause: IRREDUCIBLE
+  reconcilable: false
+  note: >
+    This is what the seeded-streams entry costs in practice, and it is narrower
+    than "the results are wrong". Both languages are estimating the same
+    quantity and both converge to it -- the analytic standard error of this
+    mean is 0.15891143, and at B=100000 the two bootstraps give 0.15847084 and
+    0.15843370. Nobody is mistaken.
+
+    What breaks is exact reproduction, and the residual is Monte Carlo error at a
+    rate almost no paper reports. At B=1000, an extremely common choice, the two
+    languages differ by about 2.5 percent on a standard error: anyone quoting a
+    bootstrap SE to three significant figures has a third figure that will not
+    survive the port -- and usually would not survive a different seed in the
+    same language either. Seen that way the cross-language problem is a special
+    case of an unreported one.
+
+    Where it does not wash out is wherever B is fixed at one by design: a single
+    train/test split, one imputation, one random subsample. There the draw is not
+    an estimate of the result, it is the result.

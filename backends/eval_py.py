@@ -109,15 +109,28 @@ def main() -> None:
 
         raw = eval(expr, env)
 
-        values = raw if hasattr(raw, "__len__") and not isinstance(raw, str) else [raw]
-        values = [float(v) for v in values]
-        if len(values) == 1:
-            quantities = {"value": values[0]}
+        # Names, when the expression supplies them, so that a multi-valued
+        # comparison lines up across languages: R names a vector with c(a=, b=)
+        # and Python with a dict, and both must land on the same quantity keys or
+        # the two sides have nothing to compare.
+        if isinstance(raw, dict):
+            named = {str(k): float(v) for k, v in raw.items()}
+        elif hasattr(raw, "index") and hasattr(raw, "to_dict"):  # pandas Series
+            named = {str(k): float(v) for k, v in raw.to_dict().items()}
         else:
-            quantities = {f"value.{i + 1}": v for i, v in enumerate(values)}
+            seq = raw if hasattr(raw, "__len__") and not isinstance(raw, str) else [raw]
+            values = [float(v) for v in seq]
+            named = (
+                {"": values[0]}
+                if len(values) == 1
+                else {str(i + 1): v for i, v in enumerate(values)}
+            )
+        quantities = {
+            ("value" if not k else f"value.{k}"): v for k, v in named.items()
+        }
         return {
             "quantities": quantities,
-            "diagnostics": {"expr": expr, "n": len(values)},
+            "diagnostics": {"expr": expr, "n": len(quantities)},
         }
 
     cc.main(

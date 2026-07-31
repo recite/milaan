@@ -59,10 +59,46 @@ initialisations, so **a simulation-based result is not cross-language
 reproducible even in principle** — no argument reconciles it, and no one has made
 a mistake. `cause: IRREDUCIBLE`, `reconcilable: false`.
 
-R is not even self-consistent here: `sample()` changed in R 3.6.0, silently
-altering every result that drew from it. That one is recoverable within a single
-R via `RNGkind(sample.kind = "Rounding")`, which makes it measurable here rather
-than a matter of archaeology.
+There are three independent reasons, any one sufficient. The seed does not mean
+the same thing — both legacy generators are Mersenne-Twister, but they scramble
+42 into the state differently, so the *uniform* streams already diverge. The
+uniform-to-normal transform differs — R's `RNGkind()` reports `Inversion`, and
+you can watch it invert (`qnorm` of R's uniform stream reproduces `rnorm` to
+eight digits, off only because R spends two uniforms building a
+higher-precision one), while numpy's legacy path uses a rejection-based polar
+method that consumes a variable number. And `default_rng` swaps the bit
+generator itself for PCG64, so numpy is not even self-consistent across its own
+APIs: code written before and after numpy 1.17 draws differently.
+
+R is not self-consistent either: `sample()` changed in R 3.6.0, silently
+altering every result that drew from it. That one *was* a defect — the old
+method mapped uniforms to integers with a small non-uniformity, material at
+large `n` — so the fix is right and the old results were slightly biased. It is
+recoverable within a single R via `RNGkind(sample.kind = "Rounding")`, which
+makes it measurable here rather than a matter of archaeology.
+
+### What it costs, which is less than it sounds
+
+Same data, same estimator, both seeded 42, bootstrapping a standard error:
+
+| B | R | Python | gap |
+|---|---|---|---|
+| 100 | 0.1565550777 | 0.1472249202 | **6.0%** |
+| 1,000 | 0.1609462901 | 0.1568576464 | **2.5%** |
+| 10,000 | 0.1587754598 | 0.1590406451 | 0.17% |
+
+The analytic standard error is 0.15891143 and both converge on it. So this is
+Monte Carlo error, not bias, and nobody is mistaken. What breaks is *exact*
+reproduction, and the residual is Monte Carlo error at a rate almost no paper
+reports: at B = 1,000, a very common choice, the two languages differ by 2.5% on
+a standard error, so a bootstrap SE quoted to three significant figures has a
+third figure that will not survive the port — and usually would not survive a
+different seed in the same language either. Seen that way the cross-language
+problem is a special case of an unreported one.
+
+Where it does not wash out is wherever B is fixed at one by design: a single
+train/test split, one imputation, one random subsample. There the draw is not an
+estimate of the result, it is the result.
 
 ## Cases are data, not code
 

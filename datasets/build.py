@@ -87,11 +87,25 @@ def counts_2x2() -> list[dict[str, float]]:
     return [{"row": r, "col": c, "n": n} for (r, c), n in sorted(table.items())]
 
 
+def bootstrap_series() -> list[dict[str, float]]:
+    """Two hundred deterministic observations to resample.
+
+    Long enough that a bootstrap is a sensible thing to do, and built from sines
+    at incommensurate frequencies so it is neither normal nor patterned in a way
+    the mean would notice.
+
+    Returns:
+        Rows with `x`.
+    """
+    return [{"x": math.sin(i) * 3 + math.cos(i * 7) + 5} for i in range(1, 201)]
+
+
 #: Name to builder. The name is what a spec's `dataset:` field refers to.
 DATASETS = {
     "small_numeric": small_numeric,
     "unequal_spread": unequal_spread,
     "counts_2x2": counts_2x2,
+    "bootstrap_series": bootstrap_series,
 }
 
 

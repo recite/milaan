@@ -43,7 +43,9 @@ ignore = ["D203", "D213"]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106", "S108", "RUF012", "D"]
+# Tests assert, and some of them spawn the very backends under test -- which is
+# the only way to check that R and Python agree about anything.
+"tests/**" = ["S101", "S105", "S106", "S108", "S603", "S607", "RUF012", "D"]
 # Backend scripts are standalone programs run by subprocess: printing is the
 # interface, they are not importable modules, and they must put the helper
 # library on sys.path before importing it -- which is what E402 objects to.

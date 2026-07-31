@@ -173,3 +173,53 @@ class TestDiscovery:
         (root / "typo.yaml").write_text("id: x\nreference: r\nimplementaions: {}\n")
         with pytest.raises(CaseError, match="declares no implementations"):
             discover_cases(root)
+
+
+class TestMultiValueNaming:
+    @pytest.mark.slow
+    def test_both_languages_name_multi_valued_results_the_same_way(self, tmp_path):
+        """R names a vector with c(a=, b=) and Python with a dict.
+
+        They have to land on the same quantity keys or a multi-valued comparison
+        has nothing to compare -- the two sides would each report quantities the
+        other never produced, and every one would show up as `absent_from`
+        rather than as a difference.
+        """
+        import json
+        import os
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[1]
+        env = {**os.environ, "MILAAN_LIB": str(root / "src" / "milaan" / "lib")}
+        out_r, out_py = tmp_path / "r.json", tmp_path / "py.json"
+        subprocess.run(
+            [
+                "Rscript",
+                "--vanilla",
+                str(root / "backends" / "eval_r.R"),
+                "--expr",
+                "c(a=1, b=2)",
+                os.devnull,
+                str(out_r),
+            ],
+            check=True,
+            env=env,
+            capture_output=True,
+        )
+        subprocess.run(
+            [
+                sys.executable,
+                str(root / "backends" / "eval_py.py"),
+                "--expr",
+                "{'a': 1.0, 'b': 2.0}",
+                os.devnull,
+                str(out_py),
+            ],
+            check=True,
+            env=env,
+            capture_output=True,
+        )
+        keys = [set(json.loads(p.read_text())["quantities"]) for p in (out_r, out_py)]
+        assert keys[0] == keys[1] == {"value.a", "value.b"}
