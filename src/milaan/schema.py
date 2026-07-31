@@ -129,12 +129,21 @@ class BackendSpec:
         label: Human-readable description for reports.
         optional: If true, a missing interpreter or package is a skip, not a
             failure. Used for backends behind an install that may not be present.
+        expect: In a reference-relative spec, the verdict expected when this
+            implementation is compared against the reference. Ignored when the
+            case declares no reference.
+        reason: Why this implementation is expected to diverge. Required whenever
+            `expect` is not `AGREE`, for the same reason it is required on a
+            quantity: an undocumented expected divergence is indistinguishable
+            from a finding nobody explained.
     """
 
     name: str
     cmd: list[str]
     label: str = ""
     optional: bool = False
+    expect: str = "AGREE"
+    reason: str | None = None
 
 
 @dataclass
@@ -160,6 +169,41 @@ class Invariant:
     reason: str = ""
 
 
+#: Why two implementations of the same procedure disagree. "They differ" is not
+#: a finding; this is the field that makes it one, and the five values are
+#: deliberately exhaustive over what the catalogue has met so far.
+#:
+#: * `DEFINITION` -- they compute different quantities. `sd` divides by `n-1`,
+#:   `np.std` by `n`. Neither is wrong; they are not the same function.
+#: * `DEFAULT` -- same quantity, different default option. `t.test` is Welch,
+#:   `ttest_ind` is Student pooled.
+#: * `ALGORITHM` -- same quantity and options, different numerical path. QR
+#:   against normal equations on an ill-conditioned design.
+#: * `IRREDUCIBLE` -- cannot agree by construction. Seeded RNG streams.
+#: * `BUG` -- one of them is wrong on its own terms.
+CAUSES = ("DEFINITION", "DEFAULT", "ALGORITHM", "IRREDUCIBLE", "BUG")
+
+
+@dataclass
+class Finding:
+    """What a documented disagreement means, and whether it can be repaired.
+
+    Attributes:
+        cause: One of `CAUSES`.
+        reconcilable: Whether some argument makes the implementations agree.
+        reconciliation: The exact incantation that does it. Required when
+            `reconcilable` is true -- this field is the deliverable, a porting
+            instruction derived from measurement rather than from folklore, and
+            "yes, somehow" is not one.
+        note: Prose for the report.
+    """
+
+    cause: str
+    reconcilable: bool = False
+    reconciliation: str = ""
+    note: str = ""
+
+
 @dataclass
 class CaseSpec:
     """A parsed `case.yaml`.
@@ -179,6 +223,17 @@ class CaseSpec:
         numeric_tol: Relative difference below which a difference is attributed
             to algorithm or tolerance rather than to definition.
         notes: Path to `NOTES.md` if present.
+        reference: Backend every other is compared against. Set by a spec whose
+            question is directional -- *does the Python equivalent reproduce the
+            R number* -- rather than "do these all agree". When set, expectations
+            are declared per implementation instead of per quantity, so a spec
+            can assert both that a default diverges and that a named argument
+            reconciles it. When unset, the case falls back to all-pairs, which is
+            right when no implementation is privileged.
+        finding: The documented cause and reconciliation, if any.
+        data_path: Dataset to feed the backends, when it lives outside the case
+            directory. Specs share named datasets from `datasets/`; a longhand
+            case generates its own `data.csv` beside itself.
     """
 
     id: str
@@ -192,6 +247,9 @@ class CaseSpec:
     agree_tol: float = 1e-8
     numeric_tol: float = 1e-5
     notes: str | None = None
+    reference: str | None = None
+    finding: Finding | None = None
+    data_path: Path | None = None
 
     def spec_for(self, quantity: str) -> QuantitySpec:
         """Return the expectation for a quantity, defaulting to `AGREE`.

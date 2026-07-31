@@ -1,4 +1,16 @@
-"""Discover case directories and parse their `case.yaml`."""
+"""Discover comparisons and parse them into `CaseSpec`.
+
+Two file formats, one object. A **case** is a directory of hand-written backend
+scripts and a `case.yaml`, which is what a comparison needs when it has real
+setup -- fitting a Firth logistic regression, or running four estimators over one
+design matrix. A **spec** is a single YAML file naming an expression per
+implementation, which is what almost every comparison actually needs, and which
+costs four lines instead of a hundred and fifty.
+
+Specs compile down to cases: each implementation becomes a `BackendSpec` invoking
+the generic evaluator for its language. Nothing downstream -- the runner, the
+comparator, the report -- knows which format a comparison came from.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +19,22 @@ from typing import Any
 
 import yaml
 
-from milaan.schema import BackendSpec, CaseSpec, Invariant, QuantitySpec
+from milaan.schema import (
+    CAUSES,
+    BackendSpec,
+    CaseSpec,
+    Finding,
+    Invariant,
+    QuantitySpec,
+)
+
+#: Evaluators that turn an expression plus a dataset into the standard result
+#: JSON. Relative to the repository root, resolved by `runner` through
+#: `MILAAN_LIB`'s sibling.
+EVALUATORS = {"R": "backends/eval_r.R", "Python": "backends/eval_py.py"}
+
+#: How a language's evaluator is launched.
+LAUNCHERS = {"R": ["Rscript", "--vanilla"], "Python": ["python"]}
 
 
 class CaseError(ValueError):
@@ -44,6 +71,158 @@ def _parse_quantities(raw: dict[str, Any], case_id: str) -> dict[str, QuantitySp
             )
         out[name] = spec
     return out
+
+
+def _parse_finding(raw: dict[str, Any] | None, case_id: str) -> Finding | None:
+    """Parse the `finding` block.
+
+    Args:
+        raw: The `finding` mapping from YAML, if present.
+        case_id: Case identifier, for error messages.
+
+    Returns:
+        The finding, or None when the spec documents none.
+
+    Raises:
+        CaseError: If the cause is unrecognised, or a disagreement is claimed
+            reconcilable without saying how.
+    """
+    if not raw:
+        return None
+    cause = str(raw.get("cause", "")).upper()
+    if cause not in CAUSES:
+        raise CaseError(
+            f"{case_id}: cause {cause!r} is not one of {', '.join(CAUSES)}. "
+            "'They differ' is not a finding; the cause is what makes it one."
+        )
+    finding = Finding(
+        cause=cause,
+        reconcilable=bool(raw.get("reconcilable", False)),
+        reconciliation=raw.get("reconciliation", ""),
+        note=raw.get("note", ""),
+    )
+    if finding.reconcilable and not finding.reconciliation:
+        raise CaseError(
+            f"{case_id}: claims the disagreement is reconcilable but does not say "
+            "how. The reconciliation is the deliverable -- a porting instruction "
+            "someone can act on -- and 'yes, somehow' is not one."
+        )
+    if finding.cause == "IRREDUCIBLE" and finding.reconcilable:
+        raise CaseError(
+            f"{case_id}: cause is IRREDUCIBLE but reconcilable is true. "
+            "Irreducible means no argument makes them agree."
+        )
+    return finding
+
+
+def _implementation_backends(
+    raw: dict[str, Any], case_id: str, root: Path
+) -> list[BackendSpec]:
+    """Compile an `implementations` block into backends.
+
+    Each implementation names a language and an expression. The expression is
+    passed to that language's generic evaluator, so a spec carries no code of its
+    own -- which is the whole point, since a hand-written backend costs about a
+    hundred and fifty lines and a spec entry costs one.
+
+    Args:
+        raw: The `implementations` mapping from YAML.
+        case_id: Case identifier, for error messages.
+        root: Repository root, against which evaluator paths resolve.
+
+    Returns:
+        One backend per implementation, in declaration order.
+
+    Raises:
+        CaseError: On an unknown language, a missing expression, or an expected
+            divergence with no reason.
+    """
+    backends = []
+    for name, body in raw.items():
+        body = body or {}
+        lang = str(body.get("lang", "")).strip()
+        if lang not in EVALUATORS:
+            raise CaseError(
+                f"{case_id}: implementation {name!r} has language {lang!r}; "
+                f"known languages are {', '.join(sorted(EVALUATORS))}"
+            )
+        expr = body.get("expr")
+        if not expr:
+            raise CaseError(f"{case_id}: implementation {name!r} has no expr")
+
+        cmd = [*LAUNCHERS[lang], str(root / EVALUATORS[lang]), "--expr", str(expr)]
+        if body.get("setup"):
+            cmd += ["--setup", str(body["setup"])]
+
+        spec = BackendSpec(
+            name=name,
+            cmd=cmd,
+            label=body.get("label", f"{lang}: {expr}"),
+            optional=bool(body.get("optional", False)),
+            expect=str(body.get("expect", "AGREE")).upper(),
+            reason=body.get("reason"),
+        )
+        if spec.expect != "AGREE" and not spec.reason:
+            raise CaseError(
+                f"{case_id}: implementation {name!r} expects {spec.expect} but "
+                "gives no reason. An expected divergence without a documented "
+                "cause is indistinguishable from an unexplained one."
+            )
+        backends.append(spec)
+    return backends
+
+
+def load_spec(path: Path, root: Path | None = None) -> CaseSpec:
+    """Parse a declarative spec file.
+
+    Args:
+        path: Path to the spec YAML.
+        root: Repository root, for locating evaluators and datasets. Defaults to
+            two levels above the spec's directory (`specs/<family>/<id>.yaml`).
+
+    Returns:
+        The parsed specification, indistinguishable downstream from a case.
+
+    Raises:
+        CaseError: If the spec is malformed, names no implementations, or names
+            a reference that is not one of them.
+    """
+    path = Path(path)
+    root = Path(root) if root else path.resolve().parents[2]
+    raw = yaml.safe_load(path.read_text()) or {}
+    case_id = raw.get("id", path.stem)
+
+    implementations = raw.get("implementations") or {}
+    if not implementations:
+        raise CaseError(f"{case_id}: declares no implementations")
+    backends = _implementation_backends(implementations, case_id, root)
+
+    reference = raw.get("reference")
+    if reference and reference not in implementations:
+        raise CaseError(
+            f"{case_id}: reference {reference!r} is not one of the "
+            f"implementations ({', '.join(implementations)})"
+        )
+
+    return CaseSpec(
+        id=case_id,
+        title=raw.get("title", case_id),
+        family=raw.get("family", path.parent.name),
+        directory=path.parent,
+        backends=backends,
+        quantities=_parse_quantities(raw.get("quantities", {}), case_id),
+        certified={k: float(v) for k, v in (raw.get("certified") or {}).items()},
+        agree_tol=float(raw.get("agree_tol", 1e-8)),
+        numeric_tol=float(raw.get("numeric_tol", 1e-5)),
+        reference=reference,
+        finding=_parse_finding(raw.get("finding"), case_id),
+        # Datasets are shared across specs rather than generated per comparison,
+        # so two specs about the same procedure are measured on the same numbers
+        # and their results can be read side by side.
+        data_path=root / "datasets" / f"{raw['dataset']}.csv"
+        if raw.get("dataset")
+        else None,
+    )
 
 
 def load_case(directory: Path) -> CaseSpec:
@@ -109,18 +288,18 @@ def load_case(directory: Path) -> CaseSpec:
 
 
 def discover_cases(*roots: Path) -> list[CaseSpec]:
-    """Find and parse every case under one or more root directories.
+    """Find and parse every comparison under one or more root directories.
 
-    Takes several roots because the two tracks live in separate trees: `cases/`
-    holds cross-implementation comparisons, `bugs/` holds version regressions.
-    A bug directory that has reached verification contains a `case.yaml` and is
-    discovered here like any other; one that has not simply is not.
+    Both formats are discovered together and become the same object: a
+    `case.yaml` beside its backend scripts, and a standalone `*.yaml` spec whose
+    implementations compile to evaluator invocations. Nothing downstream
+    distinguishes them.
 
     Args:
         *roots: Directories to search. Missing directories are skipped.
 
     Returns:
-        Parsed cases sorted by family then id.
+        Parsed comparisons sorted by family then id.
     """
     cases = []
     for root in roots:
@@ -128,6 +307,9 @@ def discover_cases(*roots: Path) -> list[CaseSpec]:
         if not root.exists():
             continue
         cases.extend(load_case(p.parent) for p in sorted(root.rglob("case.yaml")))
+        cases.extend(
+            load_spec(p) for p in sorted(root.rglob("*.yaml")) if p.name != "case.yaml"
+        )
     return sorted(cases, key=lambda c: (c.family, c.id))
 
 

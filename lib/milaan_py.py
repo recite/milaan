@@ -71,9 +71,16 @@ def read_csv(path: str) -> dict[str, list[float]]:
     Returns:
         Column name to list of floats.
     """
+    def value(raw: str) -> float:
+        # R writes missing values as NA and both languages read NaN, so the two
+        # sides of a comparison see the same gaps rather than one of them
+        # refusing to parse the file.
+        text = (raw or "").strip()
+        return math.nan if text in ("", "NA", "NaN", "nan", "None") else float(text)
+
     with open(path, newline="") as handle:
         rows = list(csv.DictReader(handle))
-    return {key: [float(row[key]) for row in rows] for key in rows[0]}
+    return {key: [value(row[key]) for row in rows] for key in rows[0]}
 
 
 def clean(quantities: dict[str, Any]) -> dict[str, float | None]:

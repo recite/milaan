@@ -116,6 +116,14 @@ class Comparison:
         expected: Verdict declared in `case.yaml`.
         outcome: `EXPECTED`, `NEW_FINDING`, `RESOLVED`, or `UNCOMPARABLE`.
         reason: Documented explanation for an expected divergence.
+        reference: Backend the others were measured against, when the case
+            declares one.
+        against_reference: Backend name to `(verdict, outcome)` against the
+            reference. Judged per implementation rather than collapsed into one
+            verdict, because collapsing hides exactly what a reference-relative
+            spec exists to assert: that the default diverges *and* that the named
+            argument reconciles it. A single worst-of verdict would let a broken
+            reconciliation pass unnoticed behind the divergence it sits beside.
     """
 
     quantity: str
@@ -127,15 +135,32 @@ class Comparison:
     expected: str = "AGREE"
     outcome: str = EXPECTED
     reason: str | None = None
+    reference: str | None = None
+    against_reference: dict[str, tuple[str, str]] = field(default_factory=dict)
 
     @property
     def is_new_finding(self) -> bool:
         """Whether this quantity diverged more than the case documented.
 
         Returns:
-            True when the observed verdict is worse than the expectation.
+            True when the observed verdict is worse than the expectation, or
+            when any single implementation missed its own expectation.
         """
-        return self.outcome == NEW_FINDING
+        if self.outcome == NEW_FINDING:
+            return True
+        return any(o == NEW_FINDING for _, o in self.against_reference.values())
+
+    @property
+    def surprises(self) -> list[str]:
+        """Implementations that did not behave as the spec declared.
+
+        Returns:
+            Backend names whose outcome against the reference is `NEW_FINDING`,
+            sorted.
+        """
+        return sorted(
+            name for name, (_, o) in self.against_reference.items() if o == NEW_FINDING
+        )
 
 
 def _comparable(results: list[Result]) -> list[Result]:
@@ -184,10 +209,24 @@ def compare_case(results: list[Result], spec: CaseSpec) -> list[Comparison]:
             else:
                 values[result.backend] = float(value)
 
-        pairwise = {
-            (a, b): relative_difference(values[a], values[b])
-            for a, b in combinations(sorted(values), 2)
-        }
+        reference = spec.reference if spec.reference in values else None
+        if reference:
+            # Directional: every implementation is measured against the one the
+            # spec nominates, and nothing else. Comparing numpy's default to
+            # numpy-with-ddof would be arithmetic without a question behind it.
+            pairwise = {
+                (reference, other): relative_difference(
+                    values[reference], values[other]
+                )
+                for other in sorted(values)
+                if other != reference
+            }
+        else:
+            pairwise = {
+                (a, b): relative_difference(values[a], values[b])
+                for a, b in combinations(sorted(values), 2)
+            }
+
         verdicts = [classify(d, agree_tol, numeric_tol) for d in pairwise.values()]
         comparison = Comparison(
             quantity=quantity,
@@ -198,11 +237,40 @@ def compare_case(results: list[Result], spec: CaseSpec) -> list[Comparison]:
             pairwise=pairwise,
             expected=declared.expect,
             reason=declared.reason,
+            reference=reference,
         )
+        if reference:
+            declared_by_backend = {b.name: b for b in spec.backends}
+            for (_, other), reldiff in pairwise.items():
+                observed = classify(reldiff, agree_tol, numeric_tol)
+                declared_backend = declared_by_backend.get(other)
+                wanted = declared_backend.expect if declared_backend else "AGREE"
+                comparison.against_reference[other] = (
+                    observed,
+                    _rank_outcome(observed, wanted),
+                )
         comparison.outcome = _outcome(comparison, len(values))
         comparisons.append(comparison)
 
     return comparisons
+
+
+def _rank_outcome(observed: str, expected: str) -> str:
+    """Score one observed verdict against its declaration.
+
+    Args:
+        observed: Verdict measured.
+        expected: Verdict the spec declared.
+
+    Returns:
+        `EXPECTED`, `NEW_FINDING` when worse than declared, or `RESOLVED` when
+        better -- a documented gap that has since closed, which means the notes
+        have gone stale rather than that all is well.
+    """
+    seen, want = VERDICT_ORDER.index(observed), VERDICT_ORDER.index(expected)
+    if seen > want:
+        return NEW_FINDING
+    return EXPECTED if seen == want else RESOLVED
 
 
 def _outcome(comparison: Comparison, n_values: int) -> str:
@@ -221,6 +289,15 @@ def _outcome(comparison: Comparison, n_values: int) -> str:
     """
     if n_values < 2:
         return UNCOMPARABLE
+    if comparison.reference:
+        # Expectations live on the implementations, so the quantity inherits
+        # from them. Judging the worst verdict against the quantity's own
+        # `expect` would flag every reference spec as a new finding, since a
+        # spec that documents a diverging default leaves the quantity at AGREE.
+        outcomes = [o for _, o in comparison.against_reference.values()]
+        if NEW_FINDING in outcomes:
+            return NEW_FINDING
+        return RESOLVED if RESOLVED in outcomes else EXPECTED
     observed = VERDICT_ORDER.index(comparison.verdict)
     if comparison.expected not in VERDICT_ORDER:
         return NEW_FINDING

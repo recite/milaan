@@ -101,6 +101,55 @@ def render_case(run: CaseRun) -> tuple[str, list[Comparison]]:
             )
         out.append("")
 
+    referenced = [c for c in comparisons if c.reference]
+    if referenced:
+        # The per-implementation verdicts are the substance of a reference spec:
+        # collapsed into one worst-of number they say "something diverged", which
+        # is the opposite of the point. Read down this column and you get the
+        # answer to "which Python call reproduces the R one".
+        out += [
+            f"**Against `{referenced[0].reference}`**",
+            "",
+            "| implementation | quantity | reldiff | verdict | |",
+            "|---|---|---|---|---|",
+        ]
+        by_backend = {b.name: b for b in spec.backends}
+        for c in referenced:
+            for name, (verdict, outcome) in sorted(c.against_reference.items()):
+                reldiff = c.pairwise.get((c.reference or "", name), 0.0)
+                flag = " **NEW**" if outcome == "NEW_FINDING" else ""
+                if outcome == "RESOLVED":
+                    flag = " *resolved*"
+                label = by_backend[name].label if name in by_backend else name
+                out.append(
+                    f"| `{name}` -- {label} | `{c.quantity}` | {reldiff:.2e} | "
+                    f"{_VERDICT_MARK.get(verdict, verdict)} | {outcome}{flag} |"
+                )
+        out.append("")
+
+        reasons = {
+            b.name: b.reason for b in spec.backends if b.reason and b.expect != "AGREE"
+        }
+        if reasons:
+            out += ["**Why they differ**", ""]
+            for name, reason in sorted(reasons.items()):
+                out.append(f"- `{name}` -- {' '.join(reason.split())}")
+            out.append("")
+
+    if spec.finding:
+        found = spec.finding
+        verdict = (
+            f"reconcilable -- {found.reconciliation}"
+            if found.reconcilable
+            else "**not reconcilable**: no argument makes these agree"
+        )
+        out += [
+            f"**Cause: {found.cause}** ({verdict})",
+            "",
+        ]
+        if found.note:
+            out += [" ".join(found.note.split()), ""]
+
     documented = [c for c in comparisons if c.reason and c.verdict != "AGREE"]
     if documented:
         out.append("**Why these differ**")

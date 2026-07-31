@@ -1,0 +1,39 @@
+id: dispersion_ddof
+family: descriptives
+title: "sd and var: R divides by n-1, numpy by n"
+quantity: "dispersion of a numeric vector"
+dataset: small_numeric
+reference: r_sd
+
+implementations:
+  r_sd:
+    lang: R
+    expr: "sd(x)"
+    label: "R: sd(x)"
+  np_std:
+    lang: Python
+    expr: "np.std(x)"
+    label: "numpy: np.std(x)"
+    expect: DIVERGE
+    reason: >
+      numpy's default is the population standard deviation, ddof=0, where R's
+      sd is the sample one. On eight observations that is a 6.5 percent gap in
+      every standard deviation, every standard error built from one, and every
+      standardised variable. Nothing warns.
+  np_std_ddof:
+    lang: Python
+    expr: "np.std(x, ddof=1)"
+    label: "numpy: np.std(x, ddof=1)"
+  pd_std:
+    lang: Python
+    expr: "pd.Series(x).std()"
+    label: "pandas: Series.std()"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "pass ddof=1 to numpy; pandas already defaults to n-1"
+  note: >
+    The trap is that pandas and numpy disagree with each other. Code that reaches
+    for a DataFrame method matches R; code that reaches for the numpy function
+    does not, and the two idioms sit side by side in the same script.

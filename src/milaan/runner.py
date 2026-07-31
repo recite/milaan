@@ -80,6 +80,11 @@ def generate_data(spec: CaseSpec, timeout: int = DEFAULT_TIMEOUT) -> str | None:
     Raises:
         RuntimeError: If the generator fails or produces no `data.csv`.
     """
+    if spec.data_path:
+        # A spec points at a shared dataset it does not own, so there is nothing
+        # to generate -- but the hash still travels with the run, which is what
+        # rules out "the two languages saw different data" when they disagree.
+        return sha256_file(spec.data_path) if spec.data_path.exists() else None
     generator = spec.directory / "data.py"
     if not generator.exists():
         return None
@@ -123,7 +128,7 @@ def run_backend(
     """
     out_path = spec.directory / f"results.{backend.name}.json"
     out_path.unlink(missing_ok=True)
-    data_path = spec.directory / "data.csv"
+    data_path = spec.data_path or spec.directory / "data.csv"
 
     cmd = [*backend.cmd, str(data_path), str(out_path)]
     # Backend scripts live at different depths under `cases/` and `bugs/`, so
