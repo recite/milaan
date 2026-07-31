@@ -27,7 +27,7 @@ Every number below was measured by running the thing, not predicted.
 | R's `glm` reports **p = 0.9995** where Firth reports **p = 0.0011** | separated data; the Wald statistic collapses as the standard error diverges |
 | GLM residual df is **30 or 3** for the same fit | statsmodels `freq_weights` vs R `glm(weights=)`; coefficients and SEs agree exactly |
 | Normal equations keep **7.1** correct digits where R's QR keeps **13.0** | NIST Longley; every backend agrees to 7 digits, so comparison alone calls it unanimous |
-| `quantile`, `fisher.test`, `cor`, `chisq.test` agree **exactly** | confirmed agreement is a result, not an absence of one |
+| `quantile`, `cor`, `fisher.test`, and BH adjustment agree **exactly** | confirmed agreement is a result, not an absence of one |
 
 ## Agreement is not correctness, and disagreement is usually not a bug
 

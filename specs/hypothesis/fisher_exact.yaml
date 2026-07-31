@@ -1,0 +1,29 @@
+id: fisher_exact
+family: hypothesis
+title: "Fisher's exact test agrees exactly on a 2x2"
+quantity: "two-sided p-value for a 2x2 table"
+dataset: counts_2x2
+reference: r_fisher
+
+implementations:
+  r_fisher:
+    lang: R
+    setup: "m <- matrix(n[order(row, col)], nrow = 2, byrow = TRUE)"
+    expr: "fisher.test(m)$p.value"
+    label: "R: fisher.test(m)"
+  scipy_fisher:
+    lang: Python
+    setup: "m = n.reshape(2, 2)"
+    expr: "st.fisher_exact(m)[1]"
+    label: "scipy: fisher_exact(m)"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do on a 2x2; scipy only supports 2x2, where the two-sided definition matches R's"
+  note: >
+    Worth checking rather than assuming, because two-sided exact p-values admit
+    more than one definition -- summing tables no more likely than the observed
+    one, doubling the smaller tail, and others -- and R and scipy could easily
+    have picked differently. On a 2x2 they did not. Larger tables are outside
+    scipy's fisher_exact entirely, so the agreement does not generalise by size.

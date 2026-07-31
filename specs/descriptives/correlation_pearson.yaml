@@ -1,0 +1,23 @@
+id: correlation_pearson
+family: descriptives
+title: "Pearson correlation agrees exactly"
+quantity: "correlation between two numeric vectors"
+dataset: small_numeric
+reference: r_cor
+
+implementations:
+  r_cor:    {lang: R,      expr: "cor(x, y)",              label: "R: cor(x, y)"}
+  np_cor:   {lang: Python, expr: "np.corrcoef(x, y)[0, 1]", label: "numpy: corrcoef"}
+  scipy_r:  {lang: Python, expr: "st.pearsonr(x, y)[0]",    label: "scipy: pearsonr"}
+  pd_cor:   {lang: Python, expr: "pd.Series(x).corr(pd.Series(y))", label: "pandas: Series.corr"}
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do; all four are the same estimator at the default"
+  note: >
+    A negative, and a useful one next to dispersion_ddof: correlation is scale
+    free, so the n versus n-1 choice cancels between the covariance and the two
+    standard deviations. The same denominator that makes sd disagree makes cor
+    agree, which is why the fix has to be reasoned per procedure rather than
+    applied as a blanket rule.
