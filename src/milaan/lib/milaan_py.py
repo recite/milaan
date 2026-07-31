@@ -71,6 +71,7 @@ def read_csv(path: str) -> dict[str, list[float]]:
     Returns:
         Column name to list of floats.
     """
+
     def value(raw: str) -> float:
         # R writes missing values as NA and both languages read NaN, so the two
         # sides of a comparison see the same gaps rather than one of them

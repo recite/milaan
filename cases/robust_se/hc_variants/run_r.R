@@ -1,4 +1,4 @@
-source(file.path(Sys.getenv("MILAAN_LIB", file.path("..", "..", "..", "lib")), "milaan.R"))
+source(file.path(Sys.getenv("MILAAN_LIB", file.path("..", "..", "..", "src", "milaan", "lib")), "milaan.R"))
 suppressPackageStartupMessages(library(sandwich))
 
 body <- function(data_path) {

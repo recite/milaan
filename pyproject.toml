@@ -27,10 +27,9 @@ milaan = "milaan.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/milaan"]
-# The backend helpers are data, not modules: they are read by R and by
-# subprocess-launched Python, and the runner points at them through MILAAN_LIB.
-# They ship with the wheel so a dependent project gets a working harness.
-artifacts = ["lib/*"]
+# The backend helpers under src/milaan/lib are data, not modules: they are read
+# by R and by subprocess-launched Python, and the runner points at them through
+# MILAAN_LIB. Living inside the package means an ordinary install carries them.
 
 [tool.ruff]
 line-length = 88
@@ -49,7 +48,7 @@ convention = "google"
 # interface, and they are not importable modules.
 "cases/**" = ["T20", "S", "D", "N", "INP"]
 "backends/**" = ["T20", "S", "D", "N", "INP"]
-"lib/**" = ["T20", "S", "D", "N", "INP"]
+"src/milaan/lib/**" = ["T20", "S", "D", "N", "INP"]
 "datasets/**" = ["T20", "INP"]
 
 [tool.pytest.ini_options]

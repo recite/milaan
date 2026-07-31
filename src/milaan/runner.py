@@ -19,8 +19,12 @@ from milaan.schema import BackendSpec, CaseSpec, Result
 #: Seconds before a backend is killed. Generous: some cases fit mixed models.
 DEFAULT_TIMEOUT = 600
 
-#: Shared backend helpers, exported to every backend as MILAAN_LIB.
-LIB_DIR = Path(__file__).resolve().parents[2] / "lib"
+#: Shared backend helpers, exported to every backend as MILAAN_LIB. They live
+#: inside the package rather than beside it so that they ship with the wheel: a
+#: dependent project -- kasauti runs its version-regression cases through this
+#: runner -- gets a working harness from an ordinary install, with no assumption
+#: that the source tree is on disk.
+LIB_DIR = Path(__file__).resolve().parent / "lib"
 
 
 @dataclass

@@ -17,7 +17,7 @@
 # it replaces, which are simply executed. It must never be pointed at a spec from
 # an untrusted source.
 
-source(file.path(Sys.getenv("MILAAN_LIB", file.path("..", "lib")), "milaan.R"))
+source(file.path(Sys.getenv("MILAAN_LIB", file.path("..", "src", "milaan", "lib")), "milaan.R"))
 
 flag <- function(flags, name, default = "") {
   hit <- which(flags == name)

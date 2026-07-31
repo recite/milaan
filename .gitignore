@@ -23,3 +23,4 @@ data/cache/
 # `kasauti frame`. The derived frame and changes tables are tracked.
 data/frame/call_sites.csv
 data/frame/extract.log
+dist/

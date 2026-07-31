@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(
-    0, os.environ.get("MILAAN_LIB", str(Path(__file__).resolve().parents[3] / "lib"))
+    0, os.environ.get("MILAAN_LIB", str(Path(__file__).resolve().parents[3] / "src" / "milaan" / "lib"))
 )
 
 import milaan_py as cc
