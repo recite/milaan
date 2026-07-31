@@ -1,0 +1,63 @@
+id: logit_separation
+title: Logistic regression on perfectly separated data
+family: glm_edge
+
+# Five implementations of "logistic regression", one dataset on which the maximum
+# likelihood estimate does not exist. No finite answer is correct, so this case
+# does not ask which package is right. It asks what each one does when handed an
+# impossible problem, and whether the user is told.
+
+backends:
+  - name: r_glm
+    cmd: ["Rscript", "--vanilla", "run_r_glm.R"]
+    label: "R stats::glm, unpenalized IRLS"
+  - name: r_firth
+    cmd: ["Rscript", "--vanilla", "run_r_firth.R"]
+    label: "R logistf, Firth penalized likelihood"
+  - name: statsmodels
+    cmd: ["python3", "run_sm.py"]
+    label: "statsmodels Logit, unpenalized MLE"
+  - name: sklearn_default
+    cmd: ["python3", "run_sklearn.py"]
+    label: "sklearn LogisticRegression(), out of the box"
+  - name: sklearn_none
+    cmd: ["python3", "run_sklearn.py", "--penalty=none"]
+    label: "sklearn LogisticRegression(penalty=None)"
+
+agree_tol: 1.0e-8
+numeric_tol: 1.0e-5
+
+quantities:
+  coef.x:
+    expect: DIVERGE
+    reason: >
+      The likelihood is monotone in the slope, so the MLE is unbounded and every
+      finite number here is an artifact of a stopping rule or of a penalty the
+      caller did not ask for. Neither of the two spreads is an iteration cap:
+      both solvers stop on their tolerance and both declare success. R's glm
+      returns 45.42 at epsilon = 1e-8 and 61.55 at 1e-12, converged = TRUE
+      throughout, and raising maxit changes nothing. sklearn without a penalty
+      returns 14.79 at tol = 1e-4 and 50.83 at 1e-12, again converged each time.
+      sklearn at its default returns 1.44, which is a function of C rather than of
+      the data -- raising C to 1e8 walks it to 14.79. Firth returns the one
+      principled finite estimate; statsmodels declines to return anything. The
+      divergence is the finding.
+  coef.intercept:
+    expect: DIVERGE
+    reason: Unbounded for the same reason as coef.x.
+  se.x:
+    expect: DIVERGE
+    reason: >
+      Reported only by the two R backends. glm's standard error is enormous
+      because the information matrix is near-singular -- that number is the only
+      signal in the whole table that something has gone wrong, and it appears
+      alongside converged = TRUE. Firth's is finite and meaningful. scikit-learn
+      computes no standard errors at all, in either configuration.
+  pvalue.x:
+    expect: DIVERGE
+    reason: >
+      glm's Wald p-value is driven to 1 by the inflated standard error, exactly
+      inverting the truth that x separates the outcome perfectly. Firth's
+      penalized likelihood ratio test reports the association. This is the
+      clearest demonstration that the Wald test is the wrong instrument under
+      separation.

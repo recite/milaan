@@ -1,0 +1,148 @@
+# milaan
+
+**मिलान** — tallying, matching, reconciliation.
+
+Does R agree with Python? A measured catalogue of where equivalent-looking
+statistical calls disagree, by how much, why, and what it takes to make them
+agree.
+
+Re-running an R analysis in Python is an ordinary thing to do — a coauthor
+prefers pandas, a reviewer wants the pipeline in one language, a student
+reimplements a published result. This repository measures what that costs.
+
+Sibling to [recite/kasauti](https://github.com/recite/kasauti), which asks the
+other question: did a package's *past* defect corrupt work already published.
+
+## What it has found
+
+Every number below was measured by running the thing, not predicted.
+
+| finding | |
+|---|---|
+| `sd(x)` and `np.std(x)` differ on **every vector** | numpy divides by `n`, R by `n-1`; `1.534135400990` against `1.435052263857` |
+| `t.test` and `ttest_ind` have **opposite defaults** | R is Welch, scipy is Student pooled |
+| `scale()` and `StandardScaler` disagree by the same factor | the `ddof` gap, propagated into every standardised regressor |
+| R and Python's Newey–West standard errors differ **7×** out of the box | neither is wrong; R prewhitens and auto-selects bandwidth, statsmodels does neither |
+| `sklearn.LogisticRegression()` silently applies L2 at `C=1.0` | its "unpenalized" coefficient is a function of `tol`, not of the data |
+| R's `glm` reports **p = 0.9995** where Firth reports **p = 0.0011** | separated data; the Wald statistic collapses as the standard error diverges |
+| GLM residual df is **30 or 3** for the same fit | statsmodels `freq_weights` vs R `glm(weights=)`; coefficients and SEs agree exactly |
+| Normal equations keep **7.1** correct digits where R's QR keeps **13.0** | NIST Longley; every backend agrees to 7 digits, so comparison alone calls it unanimous |
+| `quantile`, `fisher.test`, `cor`, `chisq.test` agree **exactly** | confirmed agreement is a result, not an absence of one |
+
+## Agreement is not correctness, and disagreement is usually not a bug
+
+Most divergence traces to a choice someone made, not to a defect. So every
+documented disagreement carries a **cause**:
+
+| cause | meaning | example |
+|---|---|---|
+| `DEFINITION` | the two functions compute different quantities | `sd` vs `np.std` — different denominator |
+| `DEFAULT` | same quantity, different default option | `t.test` Welch vs `ttest_ind` pooled |
+| `ALGORITHM` | same quantity and options, different numerics | QR vs normal equations on Longley |
+| `IRREDUCIBLE` | cannot agree by construction | seeded RNG streams |
+| `BUG` | one of them is wrong | a metric returning 1.25 on `[0,1]` |
+
+and a **reconciliation** — the exact argument that makes them agree, or an
+explicit statement that none exists. That field is the deliverable: a porting
+guide derived from measurement rather than folklore.
+
+## The RNG problem, which is not a bug and cannot be fixed
+
+In a corpus of 1,233 published replication archives, the four most-called Python
+things are `numpy.random.randn` (316 scripts), `seed` (252), `RandomState` (230),
+and `rand` (223). Random number generation is the single most common operation in
+the Python half of the replication literature.
+
+Seeded streams differ across languages by construction. `set.seed(42)` in R and
+`np.random.seed(42)` in Python index different generators through different
+initialisations, so **a simulation-based result is not cross-language
+reproducible even in principle** — no argument reconciles it, and no one has made
+a mistake. `cause: IRREDUCIBLE`, `reconcilable: false`.
+
+R is not even self-consistent here: `sample()` changed in R 3.6.0, silently
+altering every result that drew from it. That one is recoverable within a single
+R via `RNGkind(sample.kind = "Rounding")`, which makes it measurable here rather
+than a matter of archaeology.
+
+## Cases are data, not code
+
+A hand-written case costs roughly 150 lines across four files. That stops scaling
+at about fifteen. So a comparison is a spec the harness interprets:
+
+```yaml
+id: dispersion_ddof
+family: descriptives
+quantity: "dispersion of a numeric vector"
+dataset: small_numeric
+reference: r_sd                      # R is the reference: most of the corpus is R
+implementations:
+  r_sd:        {lang: R,      expr: "sd(x)"}
+  np_std:      {lang: Python, expr: "np.std(x)",          expect: DIVERGE}
+  np_std_ddof: {lang: Python, expr: "np.std(x, ddof=1)",  expect: AGREE}
+  pd_std:      {lang: Python, expr: "pd.Series(x).std()", expect: AGREE}
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "pass ddof=1 to numpy; pandas already defaults to n-1"
+```
+
+**Reference-relative, not all-pairs.** The question is directional — does the
+Python equivalent reproduce the R number — so a spec names a reference and every
+other implementation declares its expectation against it.
+
+**Expectations are required, with reasons.** A spec that merely records what
+happened is a snapshot. Declaring what *should* happen, and why, makes the suite
+a regression test: `milaan run --all --strict` exits non-zero the day an
+undocumented divergence appears.
+
+Cases needing genuine setup — Firth logistic regression, four estimators on the
+same design matrix — stay as longhand backend scripts. Both live under the same
+runner.
+
+## Verdict bands
+
+| verdict | relative difference |
+|---|---|
+| `AGREE` | < 1e-8 |
+| `NUMERIC` | < 1e-5 — same answer, different arithmetic path |
+| `DIVERGE` | anything larger |
+
+with a 1e-12 noise floor, so an exact `0.0` against an `8.2e-16` is agreement
+rather than an 8e-4 relative gap.
+
+## Backends are processes
+
+R, Python, and any pinned old version are all just commands that write a common
+JSON result schema. No `rpy2`, no in-process bridge, no shared interpreter state.
+A backend that cannot run reports itself as skipped, and `status: "error"` is a
+*result* — a case where one implementation refuses to fit is a finding, not a
+harness failure.
+
+## Usage
+
+```bash
+make install
+milaan list                      # every comparison
+milaan run --all --strict        # non-zero exit on any undocumented divergence
+milaan report                    # re-render from results on disk
+make check                       # lint, types, tests
+```
+
+## Which procedures, and why those
+
+Selection is not taste. The catalogue is seeded from a ranking of what published
+replication archives actually call, measured across 9,343 R and 6,233 Python
+scripts — `data/sampling_frame.csv`, carried over from kasauti with its
+provenance. A procedure earns a spec by being used, not by being suspicious.
+
+## Limits
+
+Confirmed agreement on one dataset is not agreement everywhere. These are
+existence proofs about defaults and definitions, not proofs of equivalence — a
+spec that agrees here can still diverge on data with different scale,
+conditioning, or missingness.
+
+The reference is R, which encodes an assumption rather than a judgment about
+quality: most of the replication corpus is R, so "can Python reproduce this" is
+the question people actually face. Where Python is the better implementation, the
+catalogue says so in the `cause` field.

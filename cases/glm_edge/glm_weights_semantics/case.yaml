@@ -1,0 +1,84 @@
+id: glm_weights_semantics
+title: "GLM weights: frequency counts versus row expansion"
+family: glm_edge
+
+# The first case to exercise the metamorphic oracle. Instead of asking whether
+# two implementations agree with each other, it asks whether each one agrees
+# with *itself* under a transformation that must not change the answer: writing
+# the same dataset as counted patterns or as one row per observation.
+#
+# That distinguishes it from every other case here. Cross-implementation
+# agreement cannot catch an error two packages share; an invariant a package
+# violates on its own terms needs no second opinion at all.
+
+backends:
+  - name: r_glm
+    cmd: ["Rscript", "--vanilla", "run_r.R"]
+    label: "R glm(weights=)"
+  - name: sm_freq_weights
+    cmd: ["python3", "run_py.py"]
+    label: "statsmodels GLM(freq_weights=)"
+  - name: sm_var_weights
+    cmd: ["python3", "run_py.py", "--var-weights"]
+    label: "statsmodels GLM(var_weights=)"
+
+agree_tol: 1.0e-8
+numeric_tol: 1.0e-5
+
+invariants:
+  - expr: "coef.x1@weighted / coef.x1@expanded"
+    equals: 1.0
+    tol: 1.0e-8
+    reason: >
+      Coefficients must survive the expansion. A frequency weight of 3 says
+      "this row happened three times", so the likelihood is identical either
+      way and the maximum is in the same place. This holds under any weight
+      reading and is the control: a backend failing it is wrong about something
+      more basic than weight semantics.
+
+  - expr: "se.x1@weighted / se.x1@expanded"
+    equals: 1.0
+    tol: 1.0e-5
+    reason: >
+      Standard errors must also survive the expansion. Measured, all three
+      backends satisfy this -- including statsmodels with var_weights, because
+      for a binomial family the variance function already carries the trial
+      count, so the two weight readings coincide on the information matrix.
+      The tolerance is 1e-5 rather than 1e-8 because the two sides are separately
+      converged IRLS fits: at 1e-8 R fails at a ratio of 1.000006477, which is
+      its own convergence tolerance rather than a statement about weights.
+
+  - expr: "df.residual@weighted / df.residual@expanded"
+    equals: 1.0
+    tol: 1.0e-8
+    reason: >
+      The cleanest tell, with no floating point in the way: residual degrees of
+      freedom is 33 - 3 = 30 under a frequency reading and 6 - 3 = 3 otherwise.
+      An off-by-a-factor-of-ten degrees of freedom changes every t and F
+      statistic computed from the fit.
+
+quantities:
+  se.x1@weighted:
+    expect: NUMERIC
+    reason: >
+      All three backends agree to about six digits; the residual gap is IRLS
+      convergence tolerance, not weight semantics. Recorded as NUMERIC rather
+      than AGREE so a real divergence would still be caught.
+  se.x2@weighted:
+    expect: NUMERIC
+    reason: As se.x1@weighted.
+  coef.x1@weighted:
+    expect: NUMERIC
+    reason: Separately converged fits; agreement to ~4e-10, not machine epsilon.
+  coef.x2@weighted:
+    expect: NUMERIC
+    reason: As coef.x1@weighted.
+  df.residual@weighted:
+    expect: DIVERGE
+    reason: >
+      The whole finding. statsmodels with freq_weights reports 30, matching the
+      33-observation expansion minus 3 parameters. R glm and statsmodels with
+      var_weights report 3, counting the 6 written rows instead. Coefficients
+      and standard errors agree across all three, so nothing warns -- but every
+      t and F statistic built on residual degrees of freedom is computed against
+      a denominator differing by a factor of ten.

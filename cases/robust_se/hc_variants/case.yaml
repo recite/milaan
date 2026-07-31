@@ -1,0 +1,21 @@
+id: hc_variants
+title: Heteroskedasticity-consistent covariance, HC0 through HC3
+family: robust_se
+
+# This case is the suite's control. Everything here is expected to agree to ten
+# digits, so a failure means the harness has started manufacturing differences --
+# a different CSV, a different formula, a lost digit in serialization -- rather
+# than that a package changed. Read a failure here before trusting any other case.
+
+backends:
+  - name: r
+    cmd: ["Rscript", "--vanilla", "run_r.R"]
+    label: "R lm + sandwich::vcovHC"
+  - name: py
+    cmd: ["python3", "run_py.py"]
+    label: "statsmodels OLS with cov_type=HC*"
+
+agree_tol: 1.0e-8
+numeric_tol: 1.0e-5
+
+# No quantities block: every quantity defaults to expecting AGREE.

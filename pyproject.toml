@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "milaan"
+version = "0.1.0"
+description = "Do R and Python agree? A measured catalogue of where equivalent-looking statistical calls disagree, and what it takes to reconcile them."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Gaurav Sood", email = "gsood07@gmail.com" }]
+keywords = [
+    "statistics",
+    "differential-testing",
+    "reproducibility",
+    "replication",
+    "cross-language",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+milaan = "milaan.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/milaan"]
+# The backend helpers are data, not modules: they are read by R and by
+# subprocess-launched Python, and the runner points at them through MILAAN_LIB.
+# They ship with the wheel so a dependent project gets a working harness.
+artifacts = ["lib/*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP", "N", "D", "S", "SIM", "T20", "PT", "RUF"]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S108", "RUF012", "D"]
+# Backend scripts are standalone programs run by subprocess: printing is the
+# interface, and they are not importable modules.
+"cases/**" = ["T20", "S", "D", "N", "INP"]
+"backends/**" = ["T20", "S", "D", "N", "INP"]
+"lib/**" = ["T20", "S", "D", "N", "INP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+pythonpath = ["src"]
+markers = [
+    "slow: runs R and Python subprocesses; run with -m slow",
+]
+
+[tool.pyright]
+include = ["src"]
+typeCheckingMode = "standard"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14",
+    "pyright>=1.1.390",
+    { include-group = "test" },
+]
+test = [
+    "pytest>=8",
+    "pytest-cov>=6",
+    "numpy>=2.0",
+    "pandas>=2.0",
+    "scipy>=1.11",
+    "statsmodels>=0.14",
+    "scikit-learn>=1.5",
+]

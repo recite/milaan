@@ -1,0 +1,70 @@
+id: nist_longley
+title: "NIST StRD Longley: certified least squares on an ill-conditioned design"
+family: certified
+
+# The third oracle. Cross-implementation agreement cannot say who is right, and
+# a metamorphic invariant cannot say whether the shared answer is the true one.
+# A certified value can: NIST publishes the coefficients to fifteen digits, so
+# each backend is scored against truth independently rather than against its
+# peers.
+#
+# Certified values transcribed from
+# https://www.itl.nist.gov/div898/strd/lls/data/LINKS/DATA/Longley.dat
+
+backends:
+  - name: r_lm
+    cmd: ["Rscript", "--vanilla", "run_r.R"]
+    label: "R lm (QR with pivoting)"
+  - name: statsmodels
+    cmd: ["python3", "run_py.py", "--statsmodels"]
+    label: "statsmodels OLS (pseudo-inverse)"
+  - name: lstsq
+    cmd: ["python3", "run_py.py", "--lstsq"]
+    label: "numpy.linalg.lstsq (SVD)"
+  - name: normal
+    cmd: ["python3", "run_py.py", "--normal"]
+    label: "normal equations (X'X)^-1 X'y -- the wrong way"
+
+# Loose by the standards of this suite, and deliberately so. The interesting
+# quantity here is not whether two backends agree but how many digits each keeps
+# against the certified answer, which the certified block below measures.
+agree_tol: 1.0e-6
+numeric_tol: 1.0e-3
+
+certified:
+  coef.b0: -3482258.63459582
+  coef.b1: 15.0618722713733
+  coef.b2: -0.0358191792925910
+  coef.b3: -2.02022980381683
+  coef.b4: -1.03322686717359
+  coef.b5: -0.0511041056535807
+  coef.b6: 1829.15146461355
+  residual.sd: 304.854073561965
+  r.squared: 0.995479004577296
+
+quantities:
+  coef.b0:
+    expect: NUMERIC
+    reason: >
+      The intercept is the worst-conditioned coefficient and the one that
+      separates the solvers. Forming X'X squares the condition number of an
+      already near-singular design, so the normal-equations backend loses digits
+      the QR and SVD backends keep.
+  coef.b1:
+    expect: NUMERIC
+    reason: As coef.b0 -- solver-dependent digit loss on an ill-conditioned system.
+  coef.b2:
+    expect: NUMERIC
+    reason: As coef.b0.
+  coef.b3:
+    expect: NUMERIC
+    reason: As coef.b0.
+  coef.b4:
+    expect: NUMERIC
+    reason: As coef.b0.
+  coef.b5:
+    expect: NUMERIC
+    reason: As coef.b0.
+  coef.b6:
+    expect: NUMERIC
+    reason: As coef.b0.

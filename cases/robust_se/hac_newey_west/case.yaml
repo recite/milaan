@@ -1,0 +1,37 @@
+id: hac_newey_west
+title: Newey-West HAC standard errors, defaults and pinned settings
+family: robust_se
+
+backends:
+  - name: r
+    cmd: ["Rscript", "--vanilla", "run_r.R"]
+    label: "R sandwich::NeweyWest"
+  - name: py
+    cmd: ["python3", "run_py.py"]
+    label: "statsmodels cov_type=HAC"
+
+agree_tol: 1.0e-8
+numeric_tol: 1.0e-5
+
+quantities:
+  se.x@default:
+    expect: DIVERGE
+    reason: >
+      Out of the box the two packages differ by a factor of seven (3.3677 vs
+      0.4781) on identical data. Neither is wrong. R's NeweyWest() defaults to
+      prewhite=TRUE, prefiltering the series through a VAR(1) before applying the
+      kernel, and selects bandwidth from the data (here 5.22 lags). statsmodels
+      cannot prewhiten at all -- cov_hac takes no such argument -- and its
+      automatic rule is the fixed formula floor(4*(T/100)^(2/9)), here 3 lags.
+      The two effects are separable: turning prewhitening off in R moves 3.3677 to
+      0.5304, and pinning the lag to 3 moves it the rest of the way to 0.4781,
+      where the packages agree to 6e-16. The implementations are the same; the
+      defaults are not.
+
+  se.x@auto_noprewhite:
+    expect: DIVERGE
+    reason: >
+      R only. statsmodels has no data-driven bandwidth selector, so there is no
+      counterpart quantity to compare against; the gap between R's chosen 5.22
+      lags and statsmodels' formulaic 3 is what remains of the default-vs-default
+      difference once prewhitening is removed.
