@@ -13,9 +13,9 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(
-    0, os.environ.get("MILAAN_LIB", str(Path(__file__).resolve().parents[3] / "src" / "milaan" / "lib"))
-)
+# Fallback is the source checkout; the runner normally sets MILAAN_LIB.
+_LIB = Path(__file__).resolve().parents[3] / "src" / "milaan" / "lib"
+sys.path.insert(0, os.environ.get("MILAAN_LIB", str(_LIB)))
 
 import milaan_py as cc
 import numpy as np

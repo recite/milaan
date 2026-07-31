@@ -45,9 +45,10 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "S108", "RUF012", "D"]
 # Backend scripts are standalone programs run by subprocess: printing is the
-# interface, and they are not importable modules.
-"cases/**" = ["T20", "S", "D", "N", "INP"]
-"backends/**" = ["T20", "S", "D", "N", "INP"]
+# interface, they are not importable modules, and they must put the helper
+# library on sys.path before importing it -- which is what E402 objects to.
+"cases/**" = ["T20", "S", "D", "N", "INP", "E402"]
+"backends/**" = ["T20", "S", "D", "N", "INP", "E402"]
 "src/milaan/lib/**" = ["T20", "S", "D", "N", "INP"]
 "datasets/**" = ["T20", "INP"]
 
