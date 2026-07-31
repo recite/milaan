@@ -1,0 +1,30 @@
+{
+  "backend": "python",
+  "case_id": "spec",
+  "diagnostics": {
+    "expr": "dict(zip(['n1', 'n2', 'n3'], np.random.normal(0, 1, 3))) | dict(zip(['u1', 'u2', 'u3'], np.random.uniform(0, 1, 3)))\n",
+    "n": 6,
+    "warnings": []
+  },
+  "env": {
+    "language": "Python",
+    "packages": {
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "sklearn": "1.9.0",
+      "statsmodels": "0.14.6"
+    },
+    "version": "3.13.2"
+  },
+  "error": null,
+  "quantities": {
+    "value.n1": 0.4967141530112327,
+    "value.n2": -0.13826430117118466,
+    "value.n3": 0.6476885381006925,
+    "value.u1": 0.15601864044243652,
+    "value.u2": 0.15599452033620265,
+    "value.u3": 0.05808361216819946
+  },
+  "status": "ok"
+}

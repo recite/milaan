@@ -7,6 +7,8 @@ reference: r_boot
 
 covers:
   - sample
+  - seed
+  - choice
 
 implementations:
   r_boot:

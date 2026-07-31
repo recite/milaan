@@ -7,6 +7,8 @@ reference: r_rnorm
 covers:
   - rnorm
   - runif
+  - seed
+  - default_rng
 
 implementations:
   r_rnorm:

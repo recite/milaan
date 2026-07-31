@@ -54,7 +54,14 @@ guide derived from measurement rather than folklore.
 In a corpus of 1,233 published replication archives, the four most-called Python
 things are `numpy.random.randn` (316 scripts), `seed` (252), `RandomState` (230),
 and `rand` (223). Random number generation is the single most common operation in
-the Python half of the replication literature.
+the Python half of the replication literature — `milaan coverage --language
+Python` puts the whole top ten in `numpy.random`.
+
+Those names are not ten things to test. `randn`, `standard_normal`, `normal(0,1)`
+and a `RandomState` object draw from one Mersenne-Twister state in one order, as
+do `rand`, `random` and `uniform(0,1)` — measured byte-identical in
+`numpy_rng_aliases`, which is what stops the finding below from being an artefact
+of which API happened to be picked.
 
 Seeded streams differ across languages by construction. `set.seed(42)` in R and
 `np.random.seed(42)` in Python index different generators through different
