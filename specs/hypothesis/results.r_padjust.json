@@ -1,0 +1,21 @@
+{
+  "case_id": "spec",
+  "backend": "r",
+  "env": {
+    "language": "R",
+    "version": "4.6.0",
+    "packages": []
+  },
+  "status": "ok",
+  "quantities": {
+    "value.1": 0.04,
+    "value.2": 0.04,
+    "value.3": 0.04,
+    "value.4": 0.04
+  },
+  "diagnostics": {
+    "expr": "p.adjust(c(0.01, 0.02, 0.03, 0.04), method = 'BH')",
+    "n": 4
+  },
+  "error": null
+}

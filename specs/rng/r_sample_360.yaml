@@ -1,0 +1,36 @@
+id: r_sample_360
+family: rng
+title: "R 3.6.0 changed sample(), and one R can still show you both"
+quantity: "a permutation of 1..10 after seeding with 42"
+reference: r_rejection
+
+implementations:
+  r_rejection:
+    lang: R
+    setup: "RNGkind(sample.kind = 'Rejection'); set.seed(42)"
+    expr: "sample(10)"
+    label: "R >= 3.6.0 (Rejection, the current default)"
+  r_rounding:
+    lang: R
+    setup: "suppressWarnings(RNGkind(sample.kind = 'Rounding')); set.seed(42)"
+    expr: "sample(10)"
+    label: "R < 3.6.0 (Rounding, the old default)"
+    expect: DIVERGE
+    reason: >
+      1 5 10 8 2 4 6 9 7 3 against 10 9 3 6 4 8 5 1 2 7 -- not a perturbation, a
+      different permutation. R 3.6.0 fixed a real bias in how sample() mapped
+      uniforms to integers, and in doing so silently changed the output of every
+      analysis that had ever called it with a fixed seed.
+
+finding:
+  cause: BUG
+  reconcilable: true
+  reconciliation: "RNGkind(sample.kind = 'Rounding') restores the pre-3.6.0 stream, warning as it goes"
+  note: >
+    Included because it answers the obvious objection to the seeded-streams
+    entry. One might suppose that staying inside one language is enough for
+    reproducibility. It is not: R's own sample() has a discontinuity at 3.6.0, so
+    a script from 2018 and the same script today disagree. What makes this
+    tractable rather than archaeological is that current R still ships the old
+    behaviour behind a flag, so both sides are measurable in one interpreter --
+    the same trick the lfe record in kasauti turns on.

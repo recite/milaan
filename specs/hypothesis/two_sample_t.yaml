@@ -1,0 +1,40 @@
+id: two_sample_t
+family: hypothesis
+title: "t.test and ttest_ind default to opposite tests"
+quantity: "two-sided p-value for a difference in means"
+dataset: unequal_spread
+reference: r_welch
+
+implementations:
+  r_welch:
+    lang: R
+    setup: "a <- value[group == 1]; b <- value[group == 2]"
+    expr: "t.test(a, b)$p.value"
+    label: "R: t.test(a, b) -- Welch, the default"
+  scipy_default:
+    lang: Python
+    setup: "a = value[group == 1]; b = value[group == 2]"
+    expr: "st.ttest_ind(a, b).pvalue"
+    label: "scipy: ttest_ind(a, b) -- pooled, the default"
+    expect: DIVERGE
+    reason: >
+      R's t.test assumes unequal variances unless told otherwise; scipy's
+      ttest_ind assumes equal ones unless told otherwise. The defaults are exact
+      opposites, so the same two lines of code in the two languages run different
+      tests. Here p = 0.845 against p = 0.658.
+  scipy_welch:
+    lang: Python
+    setup: "a = value[group == 1]; b = value[group == 2]"
+    expr: "st.ttest_ind(a, b, equal_var=False).pvalue"
+    label: "scipy: ttest_ind(equal_var=False)"
+
+finding:
+  cause: DEFAULT
+  reconcilable: true
+  reconciliation: "scipy: equal_var=False, or R: var.equal=TRUE -- pick a direction and say so"
+  note: >
+    The most quietly dangerous entry in the catalogue so far, because nothing
+    about the call sites differs. `t.test(a, b)` and `ttest_ind(a, b)` look like
+    translations of each other and are not. The gap widens exactly where the
+    assumption matters -- unequal group sizes with unequal spread -- so it is
+    smallest in the balanced examples people check against and largest in real data.

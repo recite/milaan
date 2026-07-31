@@ -1,0 +1,27 @@
+{
+  "case_id": "spec",
+  "backend": "r",
+  "env": {
+    "language": "R",
+    "version": "4.6.0",
+    "packages": []
+  },
+  "status": "ok",
+  "quantities": {
+    "value.1": 1,
+    "value.2": 5,
+    "value.3": 10,
+    "value.4": 8,
+    "value.5": 2,
+    "value.6": 4,
+    "value.7": 6,
+    "value.8": 9,
+    "value.9": 7,
+    "value.10": 3
+  },
+  "diagnostics": {
+    "expr": "sample(10)",
+    "n": 10
+  },
+  "error": null
+}

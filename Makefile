@@ -8,11 +8,11 @@ install:  ## Sync the Python environment
 
 fmt:  ## Format
 	uv run ruff format src tests
-	uv run ruff check --fix src tests cases backends lib
+	uv run ruff check --fix src tests cases backends lib datasets
 
 lint:  ## Lint
 	uv run ruff format --check src tests
-	uv run ruff check src tests cases backends lib
+	uv run ruff check src tests cases backends lib datasets
 
 types:  ## Type-check
 	uv run pyright

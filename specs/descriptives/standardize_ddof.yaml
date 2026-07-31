@@ -1,0 +1,40 @@
+id: standardize_ddof
+family: descriptives
+title: "scale() and StandardScaler: the ddof gap, propagated into every regressor"
+quantity: "first element of a standardised vector"
+dataset: small_numeric
+reference: r_scale
+
+implementations:
+  r_scale:
+    lang: R
+    expr: "scale(x)[1]"
+    label: "R: scale(x)[1]"
+  sklearn_scaler:
+    lang: Python
+    setup: "from sklearn.preprocessing import StandardScaler"
+    expr: "StandardScaler().fit_transform(x.reshape(-1, 1))[0, 0]"
+    label: "sklearn: StandardScaler"
+    expect: DIVERGE
+    reason: >
+      scale() centres and divides by the sample standard deviation; StandardScaler
+      divides by the population one. Same 6.5 percent on these eight observations,
+      but this is where it matters: standardised regressors feed a model, so the
+      gap lands in coefficients and their standard errors rather than in a
+      descriptive table where someone might notice it.
+  manual_ddof1:
+    lang: Python
+    expr: "((x - np.mean(x)) / np.std(x, ddof=1))[0]"
+    label: "numpy: centre and divide by ddof=1"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: >
+    No argument on StandardScaler does it -- there is no ddof parameter. Rescale
+    afterwards by sqrt((n-1)/n), or standardise by hand with np.std(ddof=1).
+  note: >
+    Worth separating from the sd case even though the cause is identical. There
+    the disagreement is visible in a number a reader looks at; here it is upstream
+    of a fit, and a coefficient on a differently-scaled regressor is not obviously
+    wrong to anyone.

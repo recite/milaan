@@ -1,0 +1,22 @@
+id: quantile_type
+family: descriptives
+title: "quantile: R type 7 and numpy linear are the same rule"
+quantity: "the 0.3 quantile of a numeric vector"
+dataset: small_numeric
+reference: r_quantile
+
+implementations:
+  r_quantile:  {lang: R,      expr: "quantile(x, 0.3)",             label: "R: quantile(x, 0.3)"}
+  np_quantile: {lang: Python, expr: "np.quantile(x, 0.3)",          label: "numpy: np.quantile"}
+  pd_quantile: {lang: Python, expr: "pd.Series(x).quantile(0.3)",   label: "pandas: Series.quantile"}
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do at the default; R's other eight types have no numpy equivalent by name"
+  note: >
+    A deliberate negative, and the reason the catalogue reports agreements. R
+    documents nine quantile definitions and numpy's default is R's default, so the
+    obvious worry is misplaced -- these agree exactly. The exposure is real but
+    narrower than folklore suggests: it starts only when someone passes type= in R
+    and expects numpy to follow.

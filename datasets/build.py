@@ -38,12 +38,16 @@ def unequal_spread() -> list[dict[str, float]]:
     """Two groups with very different variances and very different sizes.
 
     This is the design where Welch and Student pooled part company. With balanced
-    groups of equal spread the two tests agree to three decimals and the
-    difference in defaults looks like a curiosity; here it is the whole answer.
+    groups of equal spread the two agree to three decimals and the difference in
+    defaults looks like a curiosity; here it is the whole answer.
+
+    Long format -- a `value` column and a `group` label -- rather than one column
+    per group. Padding two unequal groups into a rectangle would introduce
+    missing values, and R and Python also disagree about those, which would
+    confound the thing this dataset exists to isolate.
 
     Returns:
-        Rows with `x` (small, wide) and `y` (large, narrow), padded to a
-        rectangle with NaN so the file stays a simple CSV.
+        Rows with `value` and `group`.
     """
     wide = [1.0, 14.0, -6.0, 21.0, -11.0]
     narrow = [
@@ -68,12 +72,8 @@ def unequal_spread() -> list[dict[str, float]]:
         4.6,
         5.2,
     ]
-    return [
-        {
-            "x": wide[i] if i < len(wide) else math.nan,
-            "y": narrow[i],
-        }
-        for i in range(len(narrow))
+    return [{"value": v, "group": 1} for v in wide] + [
+        {"value": v, "group": 2} for v in narrow
     ]
 
 

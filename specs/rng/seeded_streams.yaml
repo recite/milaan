@@ -1,0 +1,47 @@
+id: seeded_streams
+family: rng
+title: "The same seed does not mean the same numbers"
+quantity: "the first three standard normal draws after seeding with 42"
+reference: r_rnorm
+
+implementations:
+  r_rnorm:
+    lang: R
+    setup: "set.seed(42)"
+    expr: "rnorm(3)"
+    label: "R: set.seed(42); rnorm(3)"
+  numpy_legacy:
+    lang: Python
+    setup: "np.random.seed(42)"
+    expr: "np.random.standard_normal(3)"
+    label: "numpy: np.random.seed(42); standard_normal(3)"
+    expect: DIVERGE
+    reason: >
+      1.371, -0.565, 0.363 against 0.497, -0.138, 0.648. Both are Mersenne
+      Twister; they differ in how the seed initialises the state and in how
+      uniforms become normals -- R inverts the normal CDF, numpy's legacy
+      generator uses a polar method. Nothing is wrong and nothing can be passed
+      to fix it.
+  numpy_generator:
+    lang: Python
+    setup: "rng = np.random.default_rng(42)"
+    expr: "rng.standard_normal(3)"
+    label: "numpy: default_rng(42).standard_normal(3)"
+    expect: DIVERGE
+    reason: >
+      The modern numpy generator is a third stream again, PCG64 rather than
+      Mersenne Twister, so it does not even reproduce numpy's own legacy path.
+      Cross-language reproduction was never the harder problem here.
+
+finding:
+  cause: IRREDUCIBLE
+  reconcilable: false
+  note: >
+    The four most-called Python things in a corpus of 1,233 published replication
+    archives are numpy.random.randn (316 scripts), seed (252), RandomState (230),
+    and rand (223). Random number generation is the single most common operation
+    in the Python half of the replication literature, and it is the one thing that
+    cannot be ported. A bootstrap, a permutation test, a simulation study, a
+    train/test split -- none of them reproduces across languages, no matter how
+    carefully the seed is recorded. The only portable route is to move the numbers
+    themselves rather than the code that generated them.

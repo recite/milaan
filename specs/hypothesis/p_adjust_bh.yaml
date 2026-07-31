@@ -1,0 +1,25 @@
+id: p_adjust_bh
+family: hypothesis
+title: "Benjamini-Hochberg agrees exactly"
+quantity: "BH-adjusted p-values"
+reference: r_padjust
+
+implementations:
+  r_padjust:
+    lang: R
+    expr: "p.adjust(c(0.01, 0.02, 0.03, 0.04), method = 'BH')"
+    label: "R: p.adjust(method='BH')"
+  sm_bh:
+    lang: Python
+    setup: "from statsmodels.stats.multitest import multipletests"
+    expr: "multipletests([0.01, 0.02, 0.03, 0.04], method='fdr_bh')[1]"
+    label: "statsmodels: multipletests(method='fdr_bh')"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do; the method names differ but the procedure is the same"
+  note: >
+    A negative worth recording because the naming invites doubt: R calls it 'BH'
+    and statsmodels 'fdr_bh', and statsmodels offers several FDR variants R does
+    not. At the default they are the same procedure and agree to the last digit.

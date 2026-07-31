@@ -1,0 +1,20 @@
+{
+  "case_id": "spec",
+  "backend": "r",
+  "env": {
+    "language": "R",
+    "version": "4.6.0",
+    "packages": []
+  },
+  "status": "ok",
+  "quantities": {
+    "value.1": 1.37095844714667,
+    "value.2": -0.564698171396089,
+    "value.3": 0.363128411337339
+  },
+  "diagnostics": {
+    "expr": "rnorm(3)",
+    "n": 3
+  },
+  "error": null
+}

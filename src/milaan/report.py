@@ -224,7 +224,52 @@ def render(runs: list[CaseRun]) -> str:
             )
         head.append("")
 
+    head += render_porting_table(runs)
+
     return "\n".join([*head, "## Cases", "", *sections]).rstrip() + "\n"
+
+
+def render_porting_table(runs: list[CaseRun]) -> list[str]:
+    """Summarise every documented finding as porting advice.
+
+    The point of the catalogue rather than a by-product of it: someone
+    reimplementing an R analysis in Python wants one table telling them which
+    calls need an argument and which cannot be ported at all. Everything here is
+    asserted elsewhere in the report -- each reconciliation is a comparison that
+    had to come out `AGREE` for the run to pass.
+
+    Args:
+        runs: All case runs.
+
+    Returns:
+        Markdown lines, or an empty list when nothing documents a finding.
+    """
+    documented = [(r.spec, r.spec.finding) for r in runs if r.spec.finding]
+    if not documented:
+        return []
+
+    out = [
+        "## Porting table",
+        "",
+        "What to change when moving an analysis between the two languages.",
+        "",
+        "| comparison | cause | what to do |",
+        "|---|---|---|",
+    ]
+    # Irreducible first: those are the ones no amount of care fixes, so they are
+    # what a reader most needs to see before planning a port.
+    order = {"IRREDUCIBLE": 0, "BUG": 1, "DEFAULT": 2, "DEFINITION": 3, "ALGORITHM": 4}
+    for spec, found in sorted(
+        documented, key=lambda pair: (order.get(pair[1].cause, 9), pair[0].id)
+    ):
+        advice = (
+            " ".join(found.reconciliation.split())
+            if found.reconcilable
+            else "**cannot be reconciled**"
+        )
+        out.append(f"| `{spec.id}` | {found.cause} | {advice} |")
+    out.append("")
+    return out
 
 
 def write(runs: list[CaseRun], directory: Path) -> tuple[Path, Path]:

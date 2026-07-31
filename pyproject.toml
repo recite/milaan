@@ -50,6 +50,7 @@ convention = "google"
 "cases/**" = ["T20", "S", "D", "N", "INP"]
 "backends/**" = ["T20", "S", "D", "N", "INP"]
 "lib/**" = ["T20", "S", "D", "N", "INP"]
+"datasets/**" = ["T20", "INP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

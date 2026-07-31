@@ -1,0 +1,28 @@
+{
+  "backend": "python",
+  "case_id": "spec",
+  "diagnostics": {
+    "expr": "multipletests([0.01, 0.02, 0.03, 0.04], method='fdr_bh')[1]",
+    "n": 4,
+    "warnings": []
+  },
+  "env": {
+    "language": "Python",
+    "packages": {
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "sklearn": "1.9.0",
+      "statsmodels": "0.14.6"
+    },
+    "version": "3.13.2"
+  },
+  "error": null,
+  "quantities": {
+    "value.1": 0.04,
+    "value.2": 0.04,
+    "value.3": 0.04,
+    "value.4": 0.04
+  },
+  "status": "ok"
+}

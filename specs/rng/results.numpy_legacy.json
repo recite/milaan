@@ -1,0 +1,27 @@
+{
+  "backend": "python",
+  "case_id": "spec",
+  "diagnostics": {
+    "expr": "np.random.standard_normal(3)",
+    "n": 3,
+    "warnings": []
+  },
+  "env": {
+    "language": "Python",
+    "packages": {
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "sklearn": "1.9.0",
+      "statsmodels": "0.14.6"
+    },
+    "version": "3.13.2"
+  },
+  "error": null,
+  "quantities": {
+    "value.1": 0.4967141530112327,
+    "value.2": -0.13826430117118466,
+    "value.3": 0.6476885381006925
+  },
+  "status": "ok"
+}
