@@ -1,0 +1,55 @@
+id: density_bandwidth
+family: descriptives
+title: "Kernel density bandwidth: different rules, and a misleading name"
+quantity: "the bandwidth a default density estimate would use"
+dataset: bootstrap_series
+reference: r_nrd0
+
+implementations:
+  r_nrd0:
+    lang: R
+    expr: "bw.nrd0(x)"
+    label: "R: bw.nrd0(x) -- what density() uses"
+  scipy_scott:
+    lang: Python
+    expr: "st.gaussian_kde(x).factor * np.std(x, ddof=1)"
+    label: "scipy: gaussian_kde(x) -- Scott, the default"
+    expect: DIVERGE
+    reason: >
+      0.7010 against 0.7789, an 11 percent wider kernel. R's nrd0 is
+      0.9 * min(sd, IQR/1.34) * n^(-1/5); Scott's rule drops the 0.9 and the IQR
+      guard and uses sd alone. On data with any heavy tail the IQR term is what
+      keeps R's bandwidth from being inflated by outliers, so the gap widens
+      exactly where a density plot is most likely to mislead.
+  scipy_silverman:
+    lang: Python
+    expr: "st.gaussian_kde(x, bw_method='silverman').factor * np.std(x, ddof=1)"
+    label: "scipy: bw_method='silverman'"
+    expect: DIVERGE
+    reason: >
+      The trap. Reaching for 'silverman' looks like the way to match R, and it is
+      not: 0.8250 against R's own Silverman rule `bw.nrd` at 0.8256. A 0.07
+      percent gap -- close enough to read as a rounding artefact and not be one.
+      scipy's 'silverman' is (n(d+2)/4)^(-1/(d+4)) times sd; R's bw.nrd is
+      1.06 * min(sd, IQR/1.34) * n^(-1/5). Neither is R's *default*, which is nrd0.
+  scipy_pinned:
+    lang: Python
+    setup: >
+      nrd0 = 0.9 * min(np.std(x, ddof=1), st.iqr(x) / 1.34) * len(x) ** -0.2
+    expr: >
+      st.gaussian_kde(x, bw_method=nrd0 / np.std(x, ddof=1)).factor * np.std(x, ddof=1)
+    label: "scipy: bw_method pinned to nrd0"
+
+finding:
+  cause: DEFAULT
+  reconcilable: true
+  reconciliation: >
+    Compute nrd0 by hand -- 0.9 * min(sd, IQR/1.34) * n^(-1/5) -- and pass
+    bw_method = nrd0 / sd, since scipy's bw_method is a multiple of the data's
+    standard deviation rather than a bandwidth.
+  note: >
+    Bandwidth is the only real parameter in a kernel density estimate, so this is
+    not a detail: two plots of the same data, both labelled "density", differ by
+    11 percent in smoothing. Nothing in either API hints at it, and the one name
+    that sounds like it should reconcile them -- 'silverman' -- lands somewhere
+    neither library's default sits.

@@ -1,0 +1,41 @@
+id: linear_model
+family: regression
+title: "lm and OLS agree to the last digit"
+quantity: "coefficients, standard errors, R-squared, and F for a simple regression"
+dataset: small_numeric
+reference: r_lm
+
+implementations:
+  r_lm:
+    lang: R
+    setup: "m <- lm(y ~ x, data = d); s <- summary(m)"
+    expr: >
+      c(intercept = unname(coef(m)[1]), slope = unname(coef(m)[2]),
+        se_intercept = s$coefficients[1, 2], se_slope = s$coefficients[2, 2],
+        r2 = s$r.squared, fstat = unname(s$fstatistic[1]))
+    label: "R: lm(y ~ x)"
+  sm_ols:
+    lang: Python
+    setup: "r = sm.OLS(y, sm.add_constant(x)).fit()"
+    expr: >
+      {'intercept': r.params[0], 'slope': r.params[1],
+       'se_intercept': r.bse[0], 'se_slope': r.bse[1],
+       'r2': r.rsquared, 'fstat': r.fvalue}
+    label: "statsmodels: OLS(y, add_constant(x)).fit()"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do, except remember add_constant -- statsmodels fits no intercept unless you give it one"
+  note: >
+    The most important negative in the catalogue. `lm` is the second most-called
+    procedure in the R corpus at 643 scripts, and everything a regression table
+    reports -- both coefficients, both standard errors, R-squared and the
+    F-statistic -- is identical to twelve digits. Ordinary least squares ports
+    cleanly, and it is worth saying so plainly, because the disagreements
+    elsewhere in this catalogue could otherwise leave the impression that nothing
+    does.
+
+    The one trap has nothing to do with arithmetic: R's formula interface adds an
+    intercept and statsmodels does not, so a forgotten `add_constant` produces a
+    regression through the origin that looks like a regression.

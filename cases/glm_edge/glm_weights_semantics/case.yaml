@@ -67,12 +67,12 @@ quantities:
   se.x2@weighted:
     expect: NUMERIC
     reason: As se.x1@weighted.
-  coef.x1@weighted:
-    expect: NUMERIC
-    reason: Separately converged fits; agreement to ~4e-10, not machine epsilon.
-  coef.x2@weighted:
-    expect: NUMERIC
-    reason: As coef.x1@weighted.
+  # coef.x1@weighted and coef.x2@weighted default to AGREE. They were once
+  # declared NUMERIC on the grounds of "agreement to ~4e-10, not machine
+  # epsilon" -- but 4e-10 is inside this case's 1e-8 agreement band, so the
+  # declaration contradicted its own number and the suite reported RESOLVED on
+  # every run. Their agreeing is the control: all three backends find the same
+  # maximum, which is what confines the finding to residual degrees of freedom.
   df.residual@weighted:
     expect: DIVERGE
     reason: >

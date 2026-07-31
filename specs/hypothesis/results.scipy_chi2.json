@@ -2,8 +2,8 @@
   "backend": "python",
   "case_id": "spec",
   "diagnostics": {
-    "expr": "{f't{i}': np.quantile(x, 0.3, method=m) for i, m in enumerate(METHODS, 1)}\n",
-    "n": 9,
+    "expr": "st.chi2_contingency(m)[1]",
+    "n": 1,
     "warnings": []
   },
   "env": {
@@ -19,15 +19,7 @@
   },
   "error": null,
   "quantities": {
-    "value.t1": 2.8,
-    "value.t2": 2.8,
-    "value.t3": 2.1,
-    "value.t4": 2.38,
-    "value.t5": 2.73,
-    "value.t6": 2.59,
-    "value.t7": 2.8499999999999996,
-    "value.t8": 2.683333333333333,
-    "value.t9": 2.695
+    "value": 0.07219819770165763
   },
   "status": "ok"
 }

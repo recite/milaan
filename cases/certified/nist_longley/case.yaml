@@ -43,28 +43,10 @@ certified:
   r.squared: 0.995479004577296
 
 quantities:
-  coef.b0:
-    expect: NUMERIC
-    reason: >
-      The intercept is the worst-conditioned coefficient and the one that
-      separates the solvers. Forming X'X squares the condition number of an
-      already near-singular design, so the normal-equations backend loses digits
-      the QR and SVD backends keep.
-  coef.b1:
-    expect: NUMERIC
-    reason: As coef.b0 -- solver-dependent digit loss on an ill-conditioned system.
-  coef.b2:
-    expect: NUMERIC
-    reason: As coef.b0.
-  coef.b3:
-    expect: NUMERIC
-    reason: As coef.b0.
-  coef.b4:
-    expect: NUMERIC
-    reason: As coef.b0.
-  coef.b5:
-    expect: NUMERIC
-    reason: As coef.b0.
-  coef.b6:
-    expect: NUMERIC
-    reason: As coef.b0.
+  # All seven coefficients default to AGREE, and that agreement *is* the finding.
+  # The four solvers concur to within 1e-6 -- so cross-implementation comparison,
+  # on its own, returns a clean unanimous verdict on an answer one of them has
+  # computed to only seven correct digits. Declaring these NUMERIC, as this case
+  # once did, contradicted its own argument and made the suite report RESOLVED
+  # every run. What separates the solvers is the certified block below, and
+  # nothing else here can.

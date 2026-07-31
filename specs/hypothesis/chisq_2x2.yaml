@@ -1,0 +1,33 @@
+id: chisq_2x2
+family: hypothesis
+title: "Chi-squared on a 2x2 agrees, Yates correction and all"
+quantity: "p-value for independence in a 2x2 table"
+dataset: counts_2x2
+reference: r_chisq
+
+implementations:
+  r_chisq:
+    lang: R
+    setup: "m <- matrix(n[order(row, col)], nrow = 2, byrow = TRUE)"
+    expr: "suppressWarnings(chisq.test(m)$p.value)"
+    label: "R: chisq.test(m)"
+  scipy_chi2:
+    lang: Python
+    setup: "m = n.reshape(2, 2)"
+    expr: "st.chi2_contingency(m)[1]"
+    label: "scipy: chi2_contingency(m)"
+
+finding:
+  cause: DEFAULT
+  reconcilable: true
+  reconciliation: "nothing to do on a 2x2; both apply Yates' continuity correction by default"
+  note: >
+    A negative where the defaults could easily have differed and do not. Both
+    libraries apply Yates' correction automatically on a 2x2 and nowhere else,
+    and both drop it on request -- R with `correct = FALSE`, scipy with
+    `correction=False`. The agreement is exact.
+
+    Recorded next to rank_sum_ties on purpose. There the two libraries make
+    different automatic choices about a correction; here they make the same one.
+    Neither outcome is predictable from the documentation alone, which is why
+    both are measured rather than assumed.

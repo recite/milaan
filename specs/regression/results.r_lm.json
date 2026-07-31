@@ -1,0 +1,23 @@
+{
+  "case_id": "spec",
+  "backend": "r",
+  "env": {
+    "language": "R",
+    "version": "4.6.0",
+    "packages": []
+  },
+  "status": "ok",
+  "quantities": {
+    "value.intercept": 6.20408194233687,
+    "value.slope": -0.473899848254931,
+    "value.se_intercept": 1.2139359520144,
+    "value.se_slope": 0.307695547040717,
+    "value.r2": 0.28333286610513,
+    "value.fstat": 2.37208756510406
+  },
+  "diagnostics": {
+    "expr": "c(intercept = unname(coef(m)[1]), slope = unname(coef(m)[2]),\n  se_intercept = s$coefficients[1, 2], se_slope = s$coefficients[2, 2],\n  r2 = s$r.squared, fstat = unname(s$fstatistic[1]))\n",
+    "n": 6
+  },
+  "error": null
+}

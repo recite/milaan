@@ -1,22 +1,45 @@
 id: quantile_type
 family: descriptives
-title: "quantile: R type 7 and numpy linear are the same rule"
-quantity: "the 0.3 quantile of a numeric vector"
+title: "quantile: all nine of R's definitions have an exact numpy equivalent"
+quantity: "the 0.3 quantile under each of R's nine quantile types"
 dataset: small_numeric
 reference: r_quantile
 
 implementations:
-  r_quantile:  {lang: R,      expr: "quantile(x, 0.3)",             label: "R: quantile(x, 0.3)"}
-  np_quantile: {lang: Python, expr: "np.quantile(x, 0.3)",          label: "numpy: np.quantile"}
-  pd_quantile: {lang: Python, expr: "pd.Series(x).quantile(0.3)",   label: "pandas: Series.quantile"}
+  r_quantile:
+    lang: R
+    setup: "q <- function(t) unname(quantile(x, 0.3, type = t))"
+    expr: >
+      c(t1 = q(1), t2 = q(2), t3 = q(3), t4 = q(4), t5 = q(5),
+        t6 = q(6), t7 = q(7), t8 = q(8), t9 = q(9))
+    label: "R: quantile(x, 0.3, type = 1..9)"
+  np_quantile:
+    lang: Python
+    setup: >
+      METHODS = ['inverted_cdf', 'averaged_inverted_cdf', 'closest_observation',
+                 'interpolated_inverted_cdf', 'hazen', 'weibull', 'linear',
+                 'median_unbiased', 'normal_unbiased']
+    expr: >
+      {f't{i}': np.quantile(x, 0.3, method=m) for i, m in enumerate(METHODS, 1)}
+    label: "numpy: np.quantile(x, 0.3, method=...)"
 
 finding:
   cause: DEFINITION
   reconcilable: true
-  reconciliation: "nothing to do at the default; R's other eight types have no numpy equivalent by name"
+  reconciliation: >
+    R type 1..9 map in order onto numpy method= 'inverted_cdf',
+    'averaged_inverted_cdf', 'closest_observation', 'interpolated_inverted_cdf',
+    'hazen', 'weibull', 'linear', 'median_unbiased', 'normal_unbiased'. The
+    defaults already coincide: R type 7 is numpy 'linear'.
   note: >
-    A deliberate negative, and the reason the catalogue reports agreements. R
-    documents nine quantile definitions and numpy's default is R's default, so the
-    obvious worry is misplaced -- these agree exactly. The exposure is real but
-    narrower than folklore suggests: it starts only when someone passes type= in R
-    and expects numpy to follow.
+    A deliberate negative, and a correction to the obvious worry. R documents
+    nine quantile definitions and the folklore is that porting one is a
+    minefield; in fact numpy has carried all nine since 1.22 and every pair
+    agrees to twelve digits here, including the two that disagree most with each
+    other (type 3 gives 2.10 where type 7 gives 2.85 -- a 36 percent spread
+    *within* R, far larger than anything between the languages).
+
+    The exposure is real but it is about the argument, not the language: someone
+    who passes type= in R and nothing in Python gets numpy's default, which is
+    type 7. That is a silent substitution of one definition for another, and no
+    warning marks it.

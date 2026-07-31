@@ -1,0 +1,54 @@
+id: rank_sum_ties
+family: hypothesis
+title: "Wilcoxon rank sum: identical arithmetic, different automatic choice under ties"
+quantity: "two-sided p-value, under each method and at the default"
+dataset: unequal_spread
+reference: r_default
+
+implementations:
+  r_default:
+    lang: R
+    setup: "a <- value[group == 1]; b <- value[group == 2]"
+    expr: "suppressWarnings(wilcox.test(a, b)$p.value)"
+    label: "R: wilcox.test(a, b) -- the default"
+  scipy_default:
+    lang: Python
+    setup: "a = value[group == 1]; b = value[group == 2]"
+    expr: "st.mannwhitneyu(a, b).pvalue"
+    label: "scipy: mannwhitneyu(a, b) -- the default"
+    expect: DIVERGE
+    reason: >
+      0.5235 against 0.5186. The data contain one tie, and the two libraries
+      resolve that differently: R stays on its exact path, scipy's method='auto'
+      falls back to the normal approximation. Neither is wrong and both say so in
+      their documentation; the two defaults simply disagree about when an exact
+      test is still appropriate.
+  scipy_asymptotic:
+    lang: Python
+    setup: "a = value[group == 1]; b = value[group == 2]"
+    expr: >
+      st.mannwhitneyu(a, b, method='asymptotic', use_continuity=True).pvalue
+    label: "scipy: method='asymptotic', use_continuity=True"
+    expect: DIVERGE
+    reason: >
+      Pinned to the asymptotic method it matches R's asymptotic method exactly --
+      verified separately at 0.153576396550 against 0.153576396550 on a minimal
+      tied example, and again without continuity at 0.108408299981. It diverges
+      here only because the reference is R's *default*, which under ties is the
+      exact path. That is the finding: the implementations agree, the defaults do
+      not.
+
+finding:
+  cause: DEFAULT
+  reconcilable: true
+  reconciliation: >
+    Pin both: R `wilcox.test(exact = FALSE, correct = TRUE)` equals scipy
+    `mannwhitneyu(method='asymptotic', use_continuity=True)` to twelve digits,
+    and `correct = FALSE` equals `use_continuity=False`.
+  note: >
+    Worth separating from a genuine numerical disagreement, because the arithmetic
+    is identical. On tie-free data the defaults also agree exactly -- both run the
+    exact test and both return 0.621600621601. The entire divergence lives in what
+    each library does when a tie makes the exact test questionable, which is a
+    judgment call rather than a computation, and it is invisible unless you know
+    to look for it.

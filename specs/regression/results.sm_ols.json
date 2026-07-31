@@ -1,0 +1,30 @@
+{
+  "backend": "python",
+  "case_id": "spec",
+  "diagnostics": {
+    "expr": "{'intercept': r.params[0], 'slope': r.params[1],\n 'se_intercept': r.bse[0], 'se_slope': r.bse[1],\n 'r2': r.rsquared, 'fstat': r.fvalue}\n",
+    "n": 6,
+    "warnings": []
+  },
+  "env": {
+    "language": "Python",
+    "packages": {
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "sklearn": "1.9.0",
+      "statsmodels": "0.14.6"
+    },
+    "version": "3.13.2"
+  },
+  "error": null,
+  "quantities": {
+    "value.fstat": 2.37208756510406,
+    "value.intercept": 6.204081942336871,
+    "value.r2": 0.28333286610513087,
+    "value.se_intercept": 1.2139359520143962,
+    "value.se_slope": 0.307695547040717,
+    "value.slope": -0.47389984825493137
+  },
+  "status": "ok"
+}
