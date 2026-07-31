@@ -1,0 +1,19 @@
+{
+  "case_id": "spec",
+  "backend": "r",
+  "env": {
+    "language": "R",
+    "version": "4.6.0",
+    "packages": []
+  },
+  "status": "ok",
+  "quantities": {
+    "value.mean": 3.675,
+    "value.median": 3.35
+  },
+  "diagnostics": {
+    "expr": "c(mean = mean(x), median = median(x))",
+    "n": 2
+  },
+  "error": null
+}

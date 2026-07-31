@@ -1,0 +1,34 @@
+id: central_tendency
+family: descriptives
+title: "mean and median agree exactly"
+quantity: "mean and median of a numeric vector"
+dataset: small_numeric
+reference: r_center
+covers:
+  - mean
+  - median
+
+implementations:
+  r_center:
+    lang: R
+    expr: "c(mean = mean(x), median = median(x))"
+    label: "R: mean(x), median(x)"
+  np_center:
+    lang: Python
+    expr: "{'mean': np.mean(x), 'median': np.median(x)}"
+    label: "numpy: np.mean, np.median"
+  pd_center:
+    lang: Python
+    expr: "{'mean': pd.Series(x).mean(), 'median': pd.Series(x).median()}"
+    label: "pandas: Series.mean, Series.median"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do on complete data; see missing_value_policy for what happens when it is not complete"
+  note: >
+    `mean` is the seventh most-called procedure in the R corpus at 1,412 scripts
+    and `median` the fifty-fifth, and all three implementations agree exactly.
+    Recorded because it bounds where the trouble is: the arithmetic of central
+    tendency is not where these languages part company. Missing data is, and that
+    is measured separately rather than asserted here.

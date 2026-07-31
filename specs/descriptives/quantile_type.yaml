@@ -5,6 +5,9 @@ quantity: "the 0.3 quantile under each of R's nine quantile types"
 dataset: small_numeric
 reference: r_quantile
 
+covers:
+  - quantile
+
 implementations:
   r_quantile:
     lang: R

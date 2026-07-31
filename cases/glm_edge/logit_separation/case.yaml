@@ -7,6 +7,9 @@ family: glm_edge
 # does not ask which package is right. It asks what each one does when handed an
 # impossible problem, and whether the user is told.
 
+covers:
+  - glm
+
 backends:
   - name: r_glm
     cmd: ["Rscript", "--vanilla", "run_r_glm.R"]

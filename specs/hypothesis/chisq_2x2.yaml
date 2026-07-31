@@ -5,6 +5,9 @@ quantity: "p-value for independence in a 2x2 table"
 dataset: counts_2x2
 reference: r_chisq
 
+covers:
+  - chisq.test
+
 implementations:
   r_chisq:
     lang: R

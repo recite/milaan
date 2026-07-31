@@ -7,6 +7,11 @@ family: robust_se
 # a different CSV, a different formula, a lost digit in serialization -- rather
 # than that a package changed. Read a failure here before trusting any other case.
 
+covers:
+  - lm
+  - vcovHC
+  - coeftest
+
 backends:
   - name: r
     cmd: ["Rscript", "--vanilla", "run_r.R"]

@@ -1,0 +1,49 @@
+id: missing_value_policy
+family: descriptives
+title: "One of these three silently drops missing values"
+quantity: "mean of a vector containing a missing value"
+dataset: with_missing
+reference: pd_naive
+covers:
+  - mean
+
+implementations:
+  pd_naive:
+    lang: Python
+    expr: "pd.Series(x).mean()"
+    label: "pandas: Series.mean() -- drops NaN, says nothing"
+  r_narm:
+    lang: R
+    expr: "mean(x, na.rm = TRUE)"
+    label: "R: mean(x, na.rm = TRUE) -- dropping, on purpose"
+  np_nanmean:
+    lang: Python
+    expr: "np.nanmean(x)"
+    label: "numpy: np.nanmean(x) -- dropping, on purpose"
+  r_naive:
+    lang: R
+    expr: "mean(x)"
+    label: "R: mean(x) -- propagates NA"
+  np_naive:
+    lang: Python
+    expr: "np.mean(x)"
+    label: "numpy: np.mean(x) -- propagates nan"
+
+finding:
+  cause: DEFAULT
+  reconcilable: true
+  reconciliation: >
+    Make the policy explicit on every side: pandas `skipna=False` to propagate,
+    or R `na.rm = TRUE` and numpy `np.nanmean` to drop. Never rely on the default,
+    because the three defaults do not agree.
+  note: >
+    The two implementations that propagate report no number at all -- they appear
+    in the table as absent, which is exactly what a caller sees: `NA` from R, `nan`
+    from numpy, and an obvious signal that something needs deciding. pandas
+    returns a clean number computed from a different sample than the one you
+    handed it, and nothing in the output records that rows were discarded.
+
+    So the failure is asymmetric, and in the dangerous direction. The two loud
+    implementations are loud together; the quiet one is the one that keeps
+    running. Porting an R pipeline to pandas turns a stop-and-think into a silent
+    complete-case analysis.

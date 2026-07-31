@@ -5,6 +5,9 @@ quantity: "two-sided p-value, under each method and at the default"
 dataset: unequal_spread
 reference: r_default
 
+covers:
+  - wilcox.test
+
 implementations:
   r_default:
     lang: R

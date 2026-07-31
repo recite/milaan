@@ -1,0 +1,21 @@
+{
+  "case_id": "spec",
+  "backend": "r",
+  "env": {
+    "language": "R",
+    "version": "4.6.0",
+    "packages": []
+  },
+  "status": "ok",
+  "quantities": {
+    "value.pnorm": 0.933192798731142,
+    "value.qnorm": 1.95996398454005,
+    "value.pt": 0.963064401893539,
+    "value.pchisq": 0.77686983985157
+  },
+  "diagnostics": {
+    "expr": "c(pnorm = pnorm(1.5), qnorm = qnorm(0.975),\n  pt = pt(2.1, 7), pchisq = pchisq(3, 2))\n",
+    "n": 4
+  },
+  "error": null
+}

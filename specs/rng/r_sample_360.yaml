@@ -4,6 +4,9 @@ title: "R 3.6.0 changed sample(), and one R can still show you both"
 quantity: "a permutation of 1..10 after seeding with 42"
 reference: r_rejection
 
+covers:
+  - sample
+
 implementations:
   r_rejection:
     lang: R

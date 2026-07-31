@@ -5,6 +5,9 @@ quantity: "two-sided p-value for a difference in means"
 dataset: unequal_spread
 reference: r_welch
 
+covers:
+  - t.test
+
 implementations:
   r_welch:
     lang: R

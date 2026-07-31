@@ -4,6 +4,9 @@ title: "Benjamini-Hochberg agrees exactly"
 quantity: "BH-adjusted p-values"
 reference: r_padjust
 
+covers:
+  - p.adjust
+
 implementations:
   r_padjust:
     lang: R

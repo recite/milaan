@@ -111,6 +111,48 @@ def run(
 @main.command()
 @click.option("--cases-dir", type=click.Path(path_type=Path), default=None)
 @click.option(
+    "--frame", type=click.Path(path_type=Path), default=ROOT / "data/sampling_frame.csv"
+)
+@click.option("--language", type=click.Choice(["R", "Python"]), default="R")
+@click.option("--top", type=int, default=30, show_default=True)
+def coverage(cases_dir: Path | None, frame: Path, language: str, top: int) -> None:
+    """Check the catalogue against what replication archives actually call.
+
+    Args:
+        cases_dir: Directory holding comparisons.
+        frame: Corpus ranking CSV.
+        language: Which language's ranking to report.
+        top: How far down the ranking to look.
+    """
+    from milaan.coverage import load_frame, measure
+
+    specs = discover_cases(*([cases_dir] if cases_dir else CASE_ROOTS))
+    result = measure(specs, load_frame(frame))
+    covered, total = result.rate(language, top)
+
+    click.echo(
+        f"{covered} of the top {total} {language} procedures by corpus usage "
+        f"are covered by {len(specs)} comparisons\n"
+    )
+    click.echo(f"{'#':>4} {'scripts':>8} {'procedure':22} covered by")
+    for procedure in result.top(language, top):
+        by = ", ".join(procedure.covered_by) if procedure.covered else "--"
+        click.echo(
+            f"{procedure.rank:>4} {procedure.scripts:>8} {procedure.fname:22} {by}"
+        )
+
+    if result.undeclared:
+        click.echo(
+            "\nDeclared but absent from the frame -- a typo, or a procedure the "
+            "corpus never calls:"
+        )
+        for name, ids in sorted(result.undeclared.items()):
+            click.echo(f"  {name} ({', '.join(ids)})")
+
+
+@main.command()
+@click.option("--cases-dir", type=click.Path(path_type=Path), default=None)
+@click.option(
     "--reports-dir", type=click.Path(path_type=Path), default=ROOT / "reports"
 )
 def report(cases_dir: Path | None, reports_dir: Path) -> None:

@@ -180,10 +180,38 @@ make check                       # lint, types, tests
 
 ## Which procedures, and why those
 
-Selection is not taste. The catalogue is seeded from a ranking of what published
-replication archives actually call, measured across 9,343 R and 6,233 Python
-scripts — `data/sampling_frame.csv`, carried over from kasauti with its
-provenance. A procedure earns a spec by being used, not by being suspicious.
+Selection is not taste, and `milaan coverage` is what makes that checkable rather
+than merely asserted:
+
+```
+10 of the top 18 R procedures by corpus usage are covered by 22 comparisons
+
+   #  scripts procedure              covered by
+   7     1412 mean                   central_tendency, missing_value_policy
+  14      855 log                    --
+  18      690 rnorm                  seeded_streams
+  20      643 lm                     nist_longley, linear_model, hac_newey_west, hc_variants
+  ...
+```
+
+The ranking is what published replication archives actually call, measured across
+9,343 R and 6,233 Python scripts — `data/sampling_frame.csv`, carried over from
+kasauti with its provenance. Every comparison declares a `covers:` list, and the
+uncovered rows are the work queue, in order.
+
+Declared rather than inferred, deliberately. Guessing which procedure a spec
+exercises by matching identifiers in its expression is the technique that, applied
+to changelog prose in kasauti, credited `Matrix` with 3,562 scripts that meant
+base R. A short expression is more tractable than prose, but a spec that aliases
+`quantile` in its setup would still be missed, and a coverage report that quietly
+undercounts is worse than none. A `covers:` entry the frame does not list is
+reported as an error.
+
+The denominator excludes data plumbing — `length` at 3,268 scripts, `names` at
+1,954 — via a short visible list in `coverage.py`. Not because those are
+uninteresting but because a spec about `nrow` would agree trivially, and counting
+it as uncovered makes the queue look longer than it is. Anything that estimates a
+quantity stays in scope, `mean` and `log` included.
 
 ## Limits
 

@@ -5,6 +5,9 @@ quantity: "bootstrap standard error of the mean, at four resample counts"
 dataset: bootstrap_series
 reference: r_boot
 
+covers:
+  - sample
+
 implementations:
   r_boot:
     lang: R

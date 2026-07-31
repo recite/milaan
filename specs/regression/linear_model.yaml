@@ -5,6 +5,9 @@ quantity: "coefficients, standard errors, R-squared, and F for a simple regressi
 dataset: small_numeric
 reference: r_lm
 
+covers:
+  - lm
+
 implementations:
   r_lm:
     lang: R

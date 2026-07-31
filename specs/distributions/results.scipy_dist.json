@@ -1,0 +1,28 @@
+{
+  "backend": "python",
+  "case_id": "spec",
+  "diagnostics": {
+    "expr": "{'pnorm': st.norm.cdf(1.5), 'qnorm': st.norm.ppf(0.975),\n 'pt': st.t.cdf(2.1, 7), 'pchisq': st.chi2.cdf(3, 2)}\n",
+    "n": 4,
+    "warnings": []
+  },
+  "env": {
+    "language": "Python",
+    "packages": {
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "sklearn": "1.9.0",
+      "statsmodels": "0.14.6"
+    },
+    "version": "3.13.2"
+  },
+  "error": null,
+  "quantities": {
+    "value.pchisq": 0.7768698398515702,
+    "value.pnorm": 0.9331927987311419,
+    "value.pt": 0.9630644018935387,
+    "value.qnorm": 1.959963984540054
+  },
+  "status": "ok"
+}

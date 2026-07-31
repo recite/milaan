@@ -1,0 +1,39 @@
+id: normal_and_friends
+family: distributions
+title: "Distribution functions agree to fourteen digits"
+quantity: "normal, t, and chi-squared tail probabilities and one quantile"
+reference: r_dist
+covers:
+  - pnorm
+  - qnorm
+  - pt
+  - pchisq
+
+implementations:
+  r_dist:
+    lang: R
+    expr: >
+      c(pnorm = pnorm(1.5), qnorm = qnorm(0.975),
+        pt = pt(2.1, 7), pchisq = pchisq(3, 2))
+    label: "R: pnorm, qnorm, pt, pchisq"
+  scipy_dist:
+    lang: Python
+    expr: >
+      {'pnorm': st.norm.cdf(1.5), 'qnorm': st.norm.ppf(0.975),
+       'pt': st.t.cdf(2.1, 7), 'pchisq': st.chi2.cdf(3, 2)}
+    label: "scipy: norm.cdf, norm.ppf, t.cdf, chi2.cdf"
+
+finding:
+  cause: DEFINITION
+  reconcilable: true
+  reconciliation: "nothing to do; the naming differs (p/q prefix versus .cdf/.ppf) and the mathematics does not"
+  note: >
+    The foundation everything else rests on. Every p-value in this catalogue is
+    ultimately a tail probability, so if these disagreed the disagreement would
+    contaminate every hypothesis-test comparison and be impossible to attribute.
+    They agree to fourteen digits, which means a p-value that differs between the
+    languages differs because of the statistic or the degrees of freedom, never
+    because of the distribution.
+
+    Worth having precisely because it is dull. A negative that rules out a whole
+    class of causes does more work than a positive that surprises.

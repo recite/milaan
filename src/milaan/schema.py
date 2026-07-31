@@ -234,6 +234,10 @@ class CaseSpec:
         data_path: Dataset to feed the backends, when it lives outside the case
             directory. Specs share named datasets from `datasets/`; a longhand
             case generates its own `data.csv` beside itself.
+        covers: Frame procedures this comparison exercises, declared rather than
+            inferred. `milaan coverage` joins these against a ranking of what
+            replication archives actually call, which is what keeps "chosen by
+            usage, not by taste" checkable instead of merely asserted.
     """
 
     id: str
@@ -250,6 +254,7 @@ class CaseSpec:
     reference: str | None = None
     finding: Finding | None = None
     data_path: Path | None = None
+    covers: list[str] = field(default_factory=list)
 
     def spec_for(self, quantity: str) -> QuantitySpec:
         """Return the expectation for a quantity, defaulting to `AGREE`.

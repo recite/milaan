@@ -5,6 +5,9 @@ quantity: "correlation between two numeric vectors"
 dataset: small_numeric
 reference: r_cor
 
+covers:
+  - cor
+
 implementations:
   r_cor:    {lang: R,      expr: "cor(x, y)",              label: "R: cor(x, y)"}
   np_cor:   {lang: Python, expr: "np.corrcoef(x, y)[0, 1]", label: "numpy: corrcoef"}

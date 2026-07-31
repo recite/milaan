@@ -2,6 +2,11 @@ id: hac_newey_west
 title: Newey-West HAC standard errors, defaults and pinned settings
 family: robust_se
 
+covers:
+  - lm
+  - NeweyWest
+  - coeftest
+
 backends:
   - name: r
     cmd: ["Rscript", "--vanilla", "run_r.R"]

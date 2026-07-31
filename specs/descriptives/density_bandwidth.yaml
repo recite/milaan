@@ -5,6 +5,9 @@ quantity: "the bandwidth a default density estimate would use"
 dataset: bootstrap_series
 reference: r_nrd0
 
+covers:
+  - density
+
 implementations:
   r_nrd0:
     lang: R

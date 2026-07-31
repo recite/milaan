@@ -5,6 +5,9 @@ quantity: "first element of a standardised vector"
 dataset: small_numeric
 reference: r_scale
 
+covers:
+  - scale
+
 implementations:
   r_scale:
     lang: R

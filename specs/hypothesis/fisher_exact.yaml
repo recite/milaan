@@ -5,6 +5,9 @@ quantity: "two-sided p-value for a 2x2 table"
 dataset: counts_2x2
 reference: r_fisher
 
+covers:
+  - fisher.test
+
 implementations:
   r_fisher:
     lang: R

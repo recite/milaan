@@ -5,6 +5,10 @@ quantity: "dispersion of a numeric vector"
 dataset: small_numeric
 reference: r_sd
 
+covers:
+  - sd
+  - var
+
 implementations:
   r_sd:
     lang: R

@@ -11,6 +11,9 @@ family: certified
 # Certified values transcribed from
 # https://www.itl.nist.gov/div898/strd/lls/data/LINKS/DATA/Longley.dat
 
+covers:
+  - lm
+
 backends:
   - name: r_lm
     cmd: ["Rscript", "--vanilla", "run_r.R"]

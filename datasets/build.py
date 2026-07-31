@@ -100,12 +100,23 @@ def bootstrap_series() -> list[dict[str, float]]:
     return [{"x": math.sin(i) * 3 + math.cos(i * 7) + 5} for i in range(1, 201)]
 
 
+def with_missing() -> list[dict[str, float]]:
+    """A short numeric vector with one value missing.
+
+    Returns:
+        Rows with `x`, one of them NaN.
+    """
+    values = [2.1, 3.4, math.nan, 5.6, 4.2, 3.3, 2.8, 6.1]
+    return [{"x": v} for v in values]
+
+
 #: Name to builder. The name is what a spec's `dataset:` field refers to.
 DATASETS = {
     "small_numeric": small_numeric,
     "unequal_spread": unequal_spread,
     "counts_2x2": counts_2x2,
     "bootstrap_series": bootstrap_series,
+    "with_missing": with_missing,
 }
 
 

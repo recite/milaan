@@ -11,6 +11,9 @@ family: glm_edge
 # agreement cannot catch an error two packages share; an invariant a package
 # violates on its own terms needs no second opinion at all.
 
+covers:
+  - glm
+
 backends:
   - name: r_glm
     cmd: ["Rscript", "--vanilla", "run_r.R"]

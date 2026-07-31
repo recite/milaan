@@ -222,6 +222,7 @@ def load_spec(path: Path, root: Path | None = None) -> CaseSpec:
         data_path=root / "datasets" / f"{raw['dataset']}.csv"
         if raw.get("dataset")
         else None,
+        covers=list(raw.get("covers") or []),
     )
 
 
@@ -284,6 +285,7 @@ def load_case(directory: Path) -> CaseSpec:
         agree_tol=float(raw.get("agree_tol", 1e-8)),
         numeric_tol=float(raw.get("numeric_tol", 1e-5)),
         notes=str(notes) if notes.exists() else None,
+        covers=list(raw.get("covers") or []),
     )
 
 

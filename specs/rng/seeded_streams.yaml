@@ -4,6 +4,10 @@ title: "The same seed does not mean the same numbers"
 quantity: "the first three standard normal draws after seeding with 42"
 reference: r_rnorm
 
+covers:
+  - rnorm
+  - runif
+
 implementations:
   r_rnorm:
     lang: R

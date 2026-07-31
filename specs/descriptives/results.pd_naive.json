@@ -1,0 +1,25 @@
+{
+  "backend": "python",
+  "case_id": "spec",
+  "diagnostics": {
+    "expr": "pd.Series(x).mean()",
+    "n": 1,
+    "warnings": []
+  },
+  "env": {
+    "language": "Python",
+    "packages": {
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "scipy": "1.18.0",
+      "sklearn": "1.9.0",
+      "statsmodels": "0.14.6"
+    },
+    "version": "3.13.2"
+  },
+  "error": null,
+  "quantities": {
+    "value": 3.9285714285714284
+  },
+  "status": "ok"
+}
