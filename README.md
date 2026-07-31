@@ -118,6 +118,17 @@ A backend that cannot run reports itself as skipped, and `status: "error"` is a
 *result* — a case where one implementation refuses to fit is a finding, not a
 harness failure.
 
+## Depending on it
+
+kasauti runs its version-regression cases through this harness. The R and Python
+backend helpers ship inside the package, so an ordinary install is enough:
+
+```toml
+dependencies = ["milaan"]
+```
+
+A backend script finds them through `MILAAN_LIB`, which the runner exports.
+
 ## Usage
 
 ```bash
