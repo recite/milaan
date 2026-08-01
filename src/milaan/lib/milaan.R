@@ -19,6 +19,20 @@ cc_args <- function() {
   list(data = a[[n - 1]], out = a[[n]], flags = if (n > 2) a[seq_len(n - 2)] else character())
 }
 
+# Put an archived version ahead of the installed one for the rest of the session.
+#
+# `library(pkg, lib.loc = lib)` attaches the pinned version but leaves
+# `.libPaths()` alone, so `packageVersion()` -- and therefore the `env` block of
+# every result -- goes on reporting whatever is installed system-wide. A backend
+# that loads sandwich 2.4-0 and records 3.1-2 is worse than one that fails.
+#
+# An empty path is a no-op, so one script serves both the pinned backend and the
+# current one.
+cc_pin <- function(lib) {
+  if (length(lib) && nzchar(lib)) .libPaths(c(lib, .libPaths()))
+  invisible(.libPaths())
+}
+
 cc_env <- function(packages = character()) {
   versions <- list()
   for (p in packages) {
