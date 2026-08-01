@@ -50,6 +50,101 @@ cc_capture <- function(expr) {
   list(value = value, warnings = warnings)
 }
 
+# Flatten any R object into a flat list of named scalars.
+#
+# Deciding which ten numbers a case should report requires already understanding
+# what moved, which is precisely what a screening run has not done yet. So a
+# screen dumps everything the call returned and lets the comparison say which
+# quantities differ; a case that has been understood still names its own.
+#
+# Names follow the existing convention: dots for named components, `[i]` and
+# `[i,j]` for positions. Non-numeric leaves -- character, factor, function, call
+# -- are skipped rather than coerced, because a screen compares numbers and a
+# string that changed is not a moved quantity.
+cc_flatten <- function(x, prefix = "", max = 2000) {
+  out <- list()
+  join <- function(a, b) {
+    if (!nzchar(a)) return(b)
+    # `coef.x` but `resid[3]`: a positional label is already punctuated, and a
+    # stray dot before it would read as a component named "[3]".
+    if (startsWith(b, "[")) paste0(a, b) else paste0(a, ".", b)
+  }
+
+  emit <- function(name, value) {
+    if (length(out) >= max) {
+      stop(sprintf(
+        "cc_flatten: more than %d quantities under '%s'; pass a narrower object",
+        max, prefix
+      ))
+    }
+    out[[if (nzchar(name)) name else "value"]] <<- as.numeric(value)
+  }
+
+  walk <- function(value, name) {
+    if (is.null(value) || length(value) == 0) {
+      return(invisible(NULL))
+    }
+    if (is.list(value)) {
+      labels <- names(value)
+      for (i in seq_along(value)) {
+        label <- if (!is.null(labels) && nzchar(labels[[i]])) {
+          labels[[i]]
+        } else {
+          sprintf("[%d]", i)
+        }
+        walk(value[[i]], join(name, label))
+      }
+      return(invisible(NULL))
+    }
+    # Logical is numeric enough to be worth keeping: `converged` flipping from
+    # TRUE to FALSE between two versions is a moved quantity by any reading.
+    if (!is.numeric(value) && !is.logical(value)) {
+      return(invisible(NULL))
+    }
+
+    dims <- dim(value)
+    if (length(dims) == 2L) {
+      labels <- dimnames(value)
+      rows <- if (!is.null(labels) && !is.null(labels[[1]])) labels[[1]] else NULL
+      cols <- if (!is.null(labels) && !is.null(labels[[2]])) labels[[2]] else NULL
+      for (i in seq_len(dims[[1]])) {
+        for (j in seq_len(dims[[2]])) {
+          label <- if (!is.null(rows) && !is.null(cols)) {
+            paste0(rows[[i]], ".", cols[[j]])
+          } else {
+            sprintf("[%d,%d]", i, j)
+          }
+          emit(join(name, label), value[i, j])
+        }
+      }
+      return(invisible(NULL))
+    }
+    if (length(dims) > 2L) {
+      flat <- as.vector(value)
+      for (i in seq_along(flat)) emit(join(name, sprintf("[%d]", i)), flat[[i]])
+      return(invisible(NULL))
+    }
+
+    labels <- names(value)
+    if (length(value) == 1L && is.null(labels)) {
+      emit(name, value[[1]])
+      return(invisible(NULL))
+    }
+    for (i in seq_along(value)) {
+      label <- if (!is.null(labels) && nzchar(labels[[i]])) {
+        labels[[i]]
+      } else {
+        sprintf("[%d]", i)
+      }
+      emit(join(name, label), value[[i]])
+    }
+    invisible(NULL)
+  }
+
+  walk(x, prefix)
+  out
+}
+
 cc_write <- function(path, case_id, backend, quantities = list(),
                      diagnostics = list(), env = cc_env(),
                      status = "ok", error = NULL) {
