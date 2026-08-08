@@ -57,9 +57,36 @@ standard error shrinks with G, and the interval walks away from the truth.
 Recorded because it is the easy mistake in this design, and because a result that
 looked like a devastating indictment of every package was a bug in the harness.
 
+## What makes this worth probing at all
+
+A probe that checks a correct implementation under its own assumptions learns
+nothing: it confirms a theorem. Benjamini-Hochberg under positive regression
+dependence is the example -- the guarantee is proved for that case, so measuring
+it can only reproduce the proof.
+
+This case is worth running because the gap is not between a package and its
+assumptions but between a package and the *user's situation*. statsmodels
+implements CR1 correctly. It simply does not offer the estimator that works at
+five clusters, and reports a normal-based interval without saying that its
+nominal level is not what you are getting. The claim and the practice diverge,
+and nothing in the API marks the divergence.
+
+The same test applied to the other cases here: HAC's nominal coverage is a
+large-sample promise that arrives much later than practitioners budget for, and
+`estimatr`'s CR2 makes a small-sample claim that turns out to hold. Confirming
+the second is worth as much as finding the first, because it tells a user which
+tool to reach for.
+
 ## Reproducing
 
     Rscript --vanilla coverage_r.R
-    python3 coverage_py.py
+    python3 coverage_py.py            # prints the table
+    pytest coverage_py.py             # asserts the claim, and fails
 
-Every number above is what they print.
+Every number above is what they print. The Python side gates with
+[simcheck](https://github.com/finite-sample/simcheck), so the band comes from the
+replicate count rather than from a threshold chosen by eye, and the failure
+message carries the measured rate:
+
+    statsmodels cluster, G=5 coverage: observed rate 0.7300 outside the
+    3-sigma band [0.9233, 0.9767] for a nominal 0.9500 over 600 replicates
