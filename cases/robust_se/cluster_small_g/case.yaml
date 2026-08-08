@@ -1,0 +1,22 @@
+id: cluster_small_g
+title: Cluster-robust standard errors when there are few clusters
+family: robust_se
+
+covers:
+  - lm_robust
+  - vcovCL
+  - cluster.vcov
+  - coef_test
+
+backends:
+  - name: r
+    cmd: ["Rscript", "--vanilla", "coverage_r.R"]
+    label: "R: estimatr / sandwich / multiwayvcov / clubSandwich"
+  - name: py
+    cmd: ["python3", "coverage_py.py"]
+    label: "statsmodels cov_type=cluster"
+
+# This case measures coverage against a known truth rather than comparing two
+# numbers on one dataset, so there is no agree_tol: the question is not whether
+# the implementations match but whether either meets its own claim.
+claim: "nominal 95% coverage of the slope's confidence interval"
