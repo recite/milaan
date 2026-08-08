@@ -110,6 +110,29 @@ def generate_data(spec: CaseSpec, timeout: int = DEFAULT_TIMEOUT) -> str | None:
     return sha256_file(data)
 
 
+def expand(argument: str) -> str:
+    """Resolve `$VAR`, `${VAR}`, and a leading `~` in a backend argument.
+
+    A backend pinned to an archived package version has to name the library it
+    was installed into, and that location is a property of the machine rather
+    than of the case. Without expansion the only portable choice is a literal
+    path, which is how every pinned case ended up pointing at `/tmp` -- a
+    directory the operating system empties.
+
+    An undefined variable is left as written rather than blanked, so a missing
+    setting surfaces as a library that cannot be found instead of as a silent
+    fallback to some other library.
+
+    Args:
+        argument: One element of a backend command.
+
+    Returns:
+        The argument with variables and `~` expanded.
+    """
+    expanded = os.path.expandvars(argument)
+    return os.path.expanduser(expanded) if expanded.startswith("~") else expanded
+
+
 def run_backend(
     spec: CaseSpec,
     backend: BackendSpec,
@@ -134,7 +157,7 @@ def run_backend(
     out_path.unlink(missing_ok=True)
     data_path = spec.data_path or spec.directory / "data.csv"
 
-    cmd = [*backend.cmd, str(data_path), str(out_path)]
+    cmd = [*(expand(arg) for arg in backend.cmd), str(data_path), str(out_path)]
     # Backend scripts live at different depths under `cases/` and `bugs/`, so
     # the shared helper location is exported rather than reached by a relative
     # path. Moving a case between roots must not break it.
