@@ -87,6 +87,7 @@ typeCheckingMode = "standard"
 
 [dependency-groups]
 dev = [
+    "pydoclint>=0.5",
     "ruff>=0.14",
     "pyright>=1.1.390",
     { include-group = "test" },
@@ -103,3 +104,8 @@ test = [
     "statsmodels>=0.14",
     "scikit-learn>=1.5",
 ]
+
+[tool.pydoclint]
+style = "google"
+arg-type-hints-in-docstring = false
+check-return-types = false
