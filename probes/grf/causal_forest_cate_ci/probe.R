@@ -27,9 +27,11 @@ X1_TEST <- c(0.1, 0.3, 0.5, 0.7, 0.9)
 ## would spend the whole budget on the largest cell. simcheck derives its band
 ## from the replicate count, so the largest cell is simply judged with a wider
 ## band -- which the gate prints rather than hides.
-PLAN <- list(list(n = 500, reps = 1000),
-             list(n = 2000, reps = 600),
-             list(n = 8000, reps = 300))
+## See the sweep_amendment block in preregistration.yaml: the original
+## n=8000 cell measured at 33 minutes per forest, so 165 hours.
+PLAN <- list(list(n = 500, reps = 800),
+             list(n = 2000, reps = 400),
+             list(n = 4000, reps = 120))
 
 tau_fn <- function(x1) 1 + 2 * x1
 
@@ -49,11 +51,43 @@ truth <- tau_fn(X1_TEST)
 ## test points, or the pointwise claim collapses into the ATE claim.
 stopifnot(diff(range(truth)) > 1.0)
 
+args <- commandArgs(trailingOnly = TRUE)
+path <- if (length(args)) args[1] else "results.json.gz"
+
+## Written after every cell, and progress printed every 25 replicates.
+##
+## The first version of this probe wrote only at the very end. It ran for five
+## hours and twelve minutes, produced nothing, and gave no way to tell slow from
+## hung -- which is exactly the shape of failure this repository documents in
+## other people's code. Partial output is not a nicety here: it is what makes
+## the difference observable.
+flush_out <- function(rows, cells_done) {
+  out <- list(
+    probe = "grf/causal_forest_cate_ci", level = 0.95, seed = SEED,
+    dimension = DIM, num_trees = NUM_TREES, x1_test = X1_TEST, truth = truth,
+    ate_truth = 2.0, complete = identical(cells_done, vapply(PLAN, `[[`, 0, "n")),
+    cells_done = cells_done,
+    plan = lapply(PLAN, function(p) list(n = p$n, reps = p$reps)),
+    env = list(r = R.version.string, grf = as.character(packageVersion("grf"))),
+    replicates = rows
+  )
+  con <- gzfile(path, "w")
+  writeLines(jsonlite::toJSON(out, auto_unbox = TRUE, digits = 12), con)
+  close(con)
+}
+
 set.seed(SEED)
 rows <- list()
+cells_done <- numeric(0)
 for (cellspec in PLAN) {
   n <- cellspec$n
+  t_cell <- Sys.time()
   for (r in seq_len(cellspec$reps)) {
+    if (r %% 25 == 0) {
+      cat(sprintf("n=%d  %d/%d  %.1f min elapsed in cell\n", n, r, cellspec$reps,
+                  as.numeric(Sys.time() - t_cell, units = "mins")))
+      flush.console()
+    }
     d <- draw(n)
     cf <- try(causal_forest(d$X, d$Y, d$W, W.hat = 0.5, num.trees = NUM_TREES),
               silent = TRUE)
@@ -71,26 +105,11 @@ for (cellspec in PLAN) {
       ate_se = as.numeric(ate["std.err"])
     )
   }
+  ## The ATE estimand is 1 + 2*E[x1] = 2 exactly for x1 ~ Uniform(0,1); it is
+  ## stamped into the output by flush_out.
+  cells_done <- c(cells_done, n)
+  flush_out(rows, cells_done)
+  cat(sprintf("cell n=%d done in %.1f min; %d replicates written\n",
+              n, as.numeric(Sys.time() - t_cell, units = "mins"), length(rows)))
+  flush.console()
 }
-
-out <- list(
-  probe = "grf/causal_forest_cate_ci",
-  level = 0.95,
-  seed = SEED,
-  dimension = DIM,
-  num_trees = NUM_TREES,
-  x1_test = X1_TEST,
-  truth = truth,
-  ## The ATE estimand: the average of tau over the covariate distribution,
-  ## which for x1 ~ Uniform(0,1) is 1 + 2*E[x1] = 2 exactly.
-  ate_truth = 2.0,
-  plan = lapply(PLAN, function(p) list(n = p$n, reps = p$reps)),
-  env = list(r = R.version.string, grf = as.character(packageVersion("grf"))),
-  replicates = rows
-)
-
-args <- commandArgs(trailingOnly = TRUE)
-path <- if (length(args)) args[1] else "results.json.gz"
-con <- gzfile(path, "w")
-writeLines(toJSON(out, auto_unbox = TRUE, digits = 12), con)
-close(con)
