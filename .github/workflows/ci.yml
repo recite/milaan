@@ -1,0 +1,64 @@
+name: CI
+
+# This repository had no workflows at all until now, so its 112 tests -- and
+# the findings under cases/ and probes/, which kasauti depends on via a path
+# dependency -- had never run anywhere but a laptop.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "23 6 * * 1"  # weekly: surface ecosystem drift on a quiet repo
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: gojiplus/py-canon/.github/workflows/reusable-ci.yml@v1
+    with:
+      python-versions: '["3.12", "3.13"]'
+      os: '["ubuntu-latest"]'
+      wheel-import: milaan
+      coverage-floor: 0
+
+  # The R companions under cases/ are committed source that nothing has ever
+  # executed in CI. Running them properly would mean installing sandwich,
+  # lmtest, estimatr, fixest, rdrobust, grf and clubSandwich and re-deriving
+  # numbers that are already recorded in NOTES.md -- twenty minutes a push to
+  # learn nothing. A parse check is cheap and catches the failure that actually
+  # happens to committed scripts nobody runs: a syntax error.
+  r-parse:
+    name: R companions parse
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - uses: r-lib/actions/setup-r@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
+        with:
+          use-public-rspm: true
+
+      - name: Parse every committed R script
+        run: |
+          set -euo pipefail
+          found=0
+          while IFS= read -r -d '' f; do
+            found=$((found + 1))
+            echo "::group::$f"
+            Rscript --vanilla -e 'invisible(parse(commandArgs(TRUE)[1]))' "$f"
+            echo "::endgroup::"
+          done < <(find cases probes -name '*.R' -print0)
+          echo "parsed $found R scripts"
+          # A run that parses nothing is a green check that proves nothing --
+          # the failure mode this whole repository exists to document.
+          test "$found" -gt 0

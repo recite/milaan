@@ -40,15 +40,11 @@ def body(data_path):
     design_e = sm.add_constant(np.column_stack([e["x1"], e["x2"]]))
     weights = np.asarray(d["w"])
 
-    kwargs = (
-        {"freq_weights": weights} if kind == "freq" else {"var_weights": weights}
-    )
+    kwargs = {"freq_weights": weights} if kind == "freq" else {"var_weights": weights}
     weighted = sm.GLM(
         np.asarray(d["y"]), design_w, family=sm.families.Binomial(), **kwargs
     ).fit()
-    expanded = sm.GLM(
-        np.asarray(e["y"]), design_e, family=sm.families.Binomial()
-    ).fit()
+    expanded = sm.GLM(np.asarray(e["y"]), design_e, family=sm.families.Binomial()).fit()
 
     return {
         "quantities": {
