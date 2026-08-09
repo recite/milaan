@@ -72,6 +72,29 @@ nothing but its own DGP.
 
 Adversarial is allowed and wanted. Out-of-assumption is not.
 
+## 3a. A probe must be able to fail before its pass means anything
+
+Distinct from both the assumption checklist and the positive control, and easy
+to miss.
+
+Many guarantees are *conditional improvements*: the method exists because some
+simpler alternative breaks in a specific regime. `rdrobust`'s robust interval is
+built to stay valid at the MSE-optimal bandwidth, precisely where the
+conventional interval is invalidated by first-order bias. If a probe's DGP is
+smooth enough that the conventional interval covers fine, then the robust
+interval's advantage was never exercised, and reporting `HOLDS` claims something
+the run did not test.
+
+So a registration for this kind of target carries an **instrument sensitivity**
+condition: a check, computed from the same run, that the failure mode the method
+addresses actually occurred. Where it can be, the check is the naive arm the
+method replaces, recorded alongside the arm under test.
+
+If the condition is unmet the probe is recorded as **`UNINFORMATIVE`**, not
+`HOLDS`, and re-registered with a harder DGP. The distinction matters: `HOLDS`
+asserts the guarantee survived a real test, and a run that never applied one has
+no standing to say so.
+
 ## 4. Verdicts come from a fixed vocabulary
 
 | verdict | meaning |
@@ -80,6 +103,7 @@ Adversarial is allowed and wanted. Out-of-assumption is not.
 | `SLOW` | asymptotically fine, but not yet at the sizes measured. **Report the `n` at which it arrives.** Not a refutation — and that rate is usually the most useful number the probe produces. |
 | `FAILS` | misses within its own stated assumptions, at sample sizes the method is sold for. |
 | `DEFECT` | an implementation bug rather than an approximation. Must be reproducible and minimal, and gets reported upstream. |
+| `UNINFORMATIVE` | the instrument sensitivity condition of §3a was not met — the run never exercised the failure mode the method addresses. Not a pass. |
 
 `SLOW` is expected to be the modal verdict. Recording it as `FAILS` because that
 reads better is the single easiest way to discredit the whole corpus.
