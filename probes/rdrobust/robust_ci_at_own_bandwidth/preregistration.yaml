@@ -1,0 +1,100 @@
+# Committed before the probe runs. See ../../PROTOCOL.md §2.
+id: rdrobust/robust_ci_at_own_bandwidth
+tier: A
+role: target
+
+target:
+  package: rdrobust
+  version_at_registration: "4.0.0"
+  entrypoint: "rdrobust::rdrobust(y, x)  # all defaults"
+  method_year: 2014
+
+usage_evidence: >
+  data/sampling_frame.csv rank 660, 8 scripts, 51 calls, package rdrobust.
+  Low in absolute terms, but the frame measures usage in published replication
+  archives and therefore lags; a 2014 method visible at all in that corpus is in
+  wide current use. See QUEUE.md on the Tier A / Tier B distinction.
+
+claim:
+  quote: >
+    "we propose new theory-based, more robust confidence interval estimators for
+    RD treatment effects ... these CIs are valid even when the MSE-optimal
+    bandwidth is used, a case where the conventional CIs are invalid"
+  source: >
+    Calonico, Cattaneo & Titiunik (2014), "Robust Nonparametric Confidence
+    Intervals for Regression-Discontinuity Designs", Econometrica 82(6).
+  operationalised: >
+    Calling rdrobust(y, x) with all defaults -- so that the bandwidth is the
+    MSE-optimal one the package selects itself -- the interval reported on the
+    "Robust" row of $ci contains the true jump 95% of the time.
+
+dgp:
+  description: >
+    Sharp RD at cutoff zero. Running variable truncated normal, so there is
+    substantial mass at the cutoff. Regression functions are cubic and smooth on
+    each side, with DIFFERENT slope and curvature above and below -- which is
+    what generates the smoothing bias the robust interval is meant to survive.
+    Deliberately not the Lee (2008) based design used in the source paper: the
+    point of the probe is an independent DGP, not a re-run of the authors'.
+  truth: {tau: 0.5}
+  functions:
+    below: "0.4*x + 0.8*x^2 - 0.6*x^3"
+    above: "0.5 + 0.9*x - 1.2*x^2 + 0.4*x^3"
+  parameters: {x_dist: "N(0, 0.5) truncated to [-1, 1]", noise_sd: 0.3}
+
+assumptions:
+  - condition: "running variable continuous at the cutoff, with positive density there"
+    satisfied_by: "truncated normal centred at the cutoff"
+    executable: true
+  - condition: "conditional expectation functions smooth away from the cutoff"
+    satisfied_by: "cubic polynomials on each side, no kinks within the support"
+    executable: false
+  - condition: "sharp design -- treatment is a deterministic function of the running variable"
+    satisfied_by: "assignment is exactly 1{x >= 0}"
+    executable: true
+  - condition: "no manipulation of the running variable around the cutoff"
+    satisfied_by: "x is drawn independently of the outcome equation"
+    executable: false
+  - condition: "estimand is the jump at the cutoff"
+    satisfied_by: "above(0) - below(0) = 0.5 by construction"
+    executable: true
+
+# A condition on the probe, not on the method. New with this registration; see
+# PROTOCOL.md. If the Conventional arm covers acceptably, this DGP never
+# generated the bias the Robust interval exists to survive, so a HOLDS would be
+# vacuous rather than positive.
+instrument_sensitivity:
+  requirement: >
+    The Conventional arm, at the same MSE-optimal bandwidth, must under-cover --
+    outside simcheck's band on the low side -- at a majority of sweep points.
+  if_unmet: >
+    Record the probe as UNINFORMATIVE, not HOLDS, and re-register with a DGP
+    carrying more curvature. Do not report the Robust arm's rate as a pass.
+
+sweep:
+  n: [500, 1000, 2000, 5000]
+
+study:
+  reps: 2000
+  seed: 20260808
+  gate: "simcheck.assert_coverage(result, 0.95)"
+  arms_recorded: ["Conventional", "Bias-Corrected", "Robust"]
+  also_reported: >
+    Mean interval width for every arm, and the mean selected bandwidth h.
+    PROTOCOL.md forbids reporting coverage without width; here it matters
+    doubly, because the robust interval is expected to be wider than the
+    conventional one and the question is whether it buys its validity honestly.
+
+prediction:
+  verdict: HOLDS
+  detail: >
+    Robust coverage inside the band at n >= 1000. At n = 500 I expect either a
+    pass or mild under-coverage (SLOW), because the bias correction adds a term
+    the robust variance estimator must itself estimate, and at small n that
+    estimate is noisy. Conventional expected to under-cover throughout, which is
+    the paper's own point and here doubles as the sensitivity check.
+  falsifier: >
+    Robust coverage outside the band on the LOW side at n >= 1000, with the
+    sensitivity condition met. Over-coverage would be recorded as HOLDS with the
+    width cost stated, following the amendment made after the clubSandwich
+    control.

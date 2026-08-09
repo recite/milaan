@@ -1,0 +1,79 @@
+# Committed before the probe runs. See ../../PROTOCOL.md §2.
+id: clubSandwich/cr2_few_clusters
+tier: B
+role: positive_control
+
+target:
+  package: clubSandwich
+  version_at_registration: "0.7.0"
+  entrypoint: "clubSandwich::coef_test(obj, vcov = 'CR2', test = 'Satterthwaite')"
+  method_year: 2018
+
+usage_evidence: >
+  Not present in data/sampling_frame.csv, which lags recent methods (QUEUE.md).
+  Attested instead by: it is the reference implementation of the CR2 correction
+  of Bell & McCaffrey (2002) as developed by Pustejovsky & Tipton (2018), it is
+  the estimator estimatr's se_type="CR2" implements, and estimatr::lm_robust is
+  in the frame at rank 155 with 55 scripts. The correction it implements is the
+  one this project already measured statsmodels to lack.
+
+claim:
+  quote: >
+    "the CR2 correction ... in combination with Satterthwaite degrees of
+    freedom, provides hypothesis tests with Type I error close to nominal, even
+    when the number of clusters is small"
+  source: >
+    Pustejovsky & Tipton (2018), "Small-sample methods for cluster-robust
+    variance estimation and hypothesis testing in fixed effects models",
+    Journal of Business & Economic Statistics 36(4).
+  operationalised: >
+    The 95% confidence interval for the slope, formed from the CR2 standard
+    error and the Satterthwaite degrees of freedom, contains the true slope 95%
+    of the time.
+
+dgp:
+  description: >
+    Moulton design. A cluster-level regressor and a cluster-level error term,
+    drawn independently of each other, plus idiosyncratic noise. Balanced
+    clusters of 30.
+  truth: {beta: 0.5}
+  parameters: {per_cluster: 30, cluster_sd: 0.6, noise_sd: 1.0}
+  known_pitfall: >
+    Letting the cluster effect enter both x and y makes it an omitted variable
+    rather than a clustering problem, and coverage then falls toward zero as
+    clusters are ADDED. The probe asserts OLS is unbiased at every G so this
+    cannot recur unnoticed.
+
+assumptions:
+  - condition: "linear model correctly specified"
+    satisfied_by: "y is generated as beta*x plus additive noise; no omitted term"
+    executable: true
+  - condition: "observations independent across clusters"
+    satisfied_by: "cluster effects drawn i.i.d.; no cross-cluster structure"
+    executable: false
+  - condition: "arbitrary correlation within cluster permitted"
+    satisfied_by: "a shared cluster effect induces equicorrelation within cluster"
+    executable: true
+  - condition: "regressor not collinear with the fixed effects / cluster structure"
+    satisfied_by: "x varies at the cluster level but is not the cluster effect"
+    executable: false
+
+sweep:
+  n_clusters: [5, 10, 20, 40]
+
+study:
+  reps: 2000
+  seed: 20260808
+  gate: "simcheck.assert_coverage(result, 0.95)"
+  also_reported: "mean interval width, per PROTOCOL.md -- coverage alone is not reportable"
+
+prediction:
+  verdict: HOLDS
+  detail: >
+    Coverage within the 3-sigma band at every G including 5. This is the
+    method's headline selling point and the reason it exists; if it does not
+    hold here, the harness is wrong rather than the method, and the other
+    pilot verdicts are void until that is resolved.
+  falsifier: >
+    Coverage outside the band at any G, with the OLS-unbiasedness check still
+    passing (which would rule out a broken DGP).
