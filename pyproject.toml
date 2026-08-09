@@ -58,8 +58,24 @@ convention = "google"
 "datasets/**" = ["T20", "INP"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-v --tb=short"
+# cases/ and probes/ carry the findings, and they were not collected until now,
+# so nothing ran them. The finding assertions are written the way they would be
+# written if the claim held and are marked xfail(strict=True): they fail today,
+# which is the point, and if a package ever fixes its default the test starts
+# passing and CI goes red, forcing the case to be rewritten. A corpus about
+# silent staleness must not go stale silently.
+testpaths = ["tests", "cases", "probes"]
+# Explicit filenames, not a glob. The backend scripts under cases/ (run_py.py,
+# run_sm.py, run_sklearn.py) have no `__main__` guard because they are meant to
+# be run by subprocess -- a pattern like "*_py.py" would import and therefore
+# EXECUTE them during collection.
+python_files = ["test_*.py", "gate.py", "coverage_py.py", "size_py.py"]
+# Every probe names its gate `gate.py`, and several cases name their study
+# `coverage_py.py`. Under the default import mode those collide -- pytest
+# derives a module name from the basename and refuses the second one. importlib
+# mode gives each file a unique module identity without requiring __init__.py
+# in every probe directory.
+addopts = "-v --tb=short --import-mode=importlib"
 pythonpath = ["src"]
 markers = [
     "slow: runs R and Python subprocesses; run with -m slow",

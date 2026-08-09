@@ -16,6 +16,7 @@ Run as a script it prints the tables in NOTES.md; run under pytest it asserts.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from scipy.stats import ttest_ind
 from simcheck import assert_count_rate
 
@@ -82,6 +83,16 @@ def test_welch_holds_its_size_when_the_assumption_is_not_met() -> None:
     )
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "The finding. scipy.stats.ttest_ind defaults to equal_var=True and "
+        "rejects 44% of the time under a true null at n=(10,100), sd=(4,1). "
+        "strict=True so that if scipy ever changes this default the test starts "
+        "passing and CI fails, forcing the case to be rewritten -- a corpus "
+        "about silent staleness must not go stale silently."
+    ),
+)
 def test_scipy_default_ttest_holds_its_nominal_size() -> None:
     """The claim, gated. Expected to fail: that is the finding, not a defect here.
 

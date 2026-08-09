@@ -17,6 +17,7 @@ via :func:`simcheck.assert_coverage`, whose band comes from the replicate count.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from scipy import stats as st
 from simcheck import Estimate, MonteCarloResult, assert_coverage, monte_carlo
 from statsmodels.stats.proportion import proportion_confint
@@ -132,6 +133,15 @@ def test_the_default_interval_is_degenerate_at_zero_successes() -> None:
     assert interval(20, 20, "normal") == (1.0, 1.0)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "The finding. proportion_confint defaults to method='normal' (Wald), "
+        "which returns (0.0, 0.0) at zero successes and covers 0.182 at "
+        "p=0.01, n=20. strict=True so that if statsmodels ever changes the "
+        "default the test starts passing and CI fails, forcing a rewrite."
+    ),
+)
 def test_statsmodels_default_binomial_interval_covers() -> None:
     """The claim, gated. Expected to fail: that is the finding, not a defect here.
 

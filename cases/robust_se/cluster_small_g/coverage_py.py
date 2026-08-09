@@ -10,6 +10,7 @@ NOTES.md; run under pytest it fails where the claim fails.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 import statsmodels.api as sm
 from scipy import stats as st
 from simcheck import MonteCarloResult, assert_coverage, binomial_band
@@ -77,6 +78,15 @@ def study(n_clusters: int, use_t: bool, seed: int = 11) -> MonteCarloResult:
     )
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "The finding. statsmodels cov_type='cluster' is CR1 with a normal "
+        "critical value and covers 0.730 at G=5, where estimatr's CR2 covers "
+        "0.963. strict=True so that if statsmodels ever ships CR2 the test "
+        "starts passing and CI fails, forcing the case to be rewritten."
+    ),
+)
 def test_statsmodels_cluster_interval_covers_with_few_clusters() -> None:
     """The claim, gated. Expected to fail: that is the finding, not a defect here.
 
