@@ -76,14 +76,34 @@ flush_out <- function(rows, cells_done) {
   close(con)
 }
 
-set.seed(SEED)
+## Resume: whole cells already on disk are not re-run. A probe that has been
+## interrupted three times should not start from zero a fourth.
 rows <- list()
 cells_done <- numeric(0)
+if (file.exists(path)) {
+  prev <- jsonlite::fromJSON(path, simplifyVector = FALSE)
+  if (!is.null(prev$cells_done) && length(prev$cells_done)) {
+    cells_done <- as.numeric(unlist(prev$cells_done))
+    rows <- prev$replicates
+    cat(sprintf("resuming: cells %s already done, %d replicates on disk\n",
+                paste(cells_done, collapse = ","), length(rows)))
+  }
+}
+
+set.seed(SEED)
 for (cellspec in PLAN) {
   n <- cellspec$n
+  if (n %in% cells_done) {
+    cat(sprintf("skipping n=%d, already complete\n", n))
+    next
+  }
   t_cell <- Sys.time()
   for (r in seq_len(cellspec$reps)) {
+    ## Flushed on the same cadence as the progress line, not only per cell. The
+    ## previous version flushed per cell and was killed inside the first one,
+    ## losing everything -- coarse checkpointing is the same defect as none.
     if (r %% 25 == 0) {
+      flush_out(rows, cells_done)
       cat(sprintf("n=%d  %d/%d  %.1f min elapsed in cell\n", n, r, cellspec$reps,
                   as.numeric(Sys.time() - t_cell, units = "mins")))
       flush.console()
