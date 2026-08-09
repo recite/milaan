@@ -97,6 +97,24 @@ instrument.
 For that reason the pilot deliberately includes a target expected to pass. It is
 a positive control, not filler.
 
+### A control's falsifier must be one-sided
+
+Learned from the first one. The `clubSandwich` control registered its falsifier
+as "coverage outside the band at any G", and that fired — CR2 covers 0.9765 at
+five clusters against a nominal 0.95.
+
+But a control that misses **conservatively** still demonstrates a working
+harness; one that misses **liberally** does not. A two-sided falsifier conflates
+the two, and would have condemned the instrument on evidence that in fact
+vindicated it. Controls therefore register a one-sided falsifier, and a
+conservative miss is recorded as `HOLDS` with the direction and the width cost
+stated.
+
+The same probe also shows how the harness earns trust independently of its
+control's verdict: the CR1 arm reproduced the textbook under-coverage
+(0.716 at G=5 rising to 0.927 at G=40), which is only possible if the DGP
+carries the within-cluster correlation it claims to.
+
 ## Layout
 
 ```
