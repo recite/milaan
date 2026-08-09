@@ -11,6 +11,7 @@ it prints the table for NOTES.md; run under pytest it asserts.
 
 from __future__ import annotations
 
+import gzip
 import json
 from pathlib import Path
 
@@ -18,7 +19,7 @@ import numpy as np
 from simcheck import MonteCarloResult, assert_coverage, assert_unbiased, binomial_band
 
 HERE = Path(__file__).parent
-RESULTS = HERE / "results.json"
+RESULTS = HERE / "results.json.gz"
 
 
 def load() -> dict:
@@ -35,7 +36,8 @@ def load() -> dict:
             f"{RESULTS} missing -- run "
             f"`Rscript --vanilla {HERE / 'probe.R'} {RESULTS}` first"
         )
-    return json.loads(RESULTS.read_text())
+    with gzip.open(RESULTS, "rt") as handle:
+        return json.load(handle)
 
 
 def cell(data: dict, n_clusters: int, arm: str = "cr2") -> MonteCarloResult:

@@ -74,7 +74,11 @@ out <- list(
   ),
   replicates = rows
 )
-## Output path is argv[1] when given, else results.json beside the caller's cwd.
+## Gzipped: per-replicate rows are what let the gate be re-run without R, but
+## eight thousand of them is 1.4 MB uncompressed and the corpus has many probes.
+## Compressed it is a tenth of that at full fidelity.
 args <- commandArgs(trailingOnly = TRUE)
-writeLines(toJSON(out, auto_unbox = TRUE, digits = 12),
-           if (length(args)) args[1] else "results.json")
+path <- if (length(args)) args[1] else "results.json.gz"
+con <- gzfile(path, "w")
+writeLines(toJSON(out, auto_unbox = TRUE, digits = 12), con)
+close(con)
