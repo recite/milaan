@@ -1,5 +1,6 @@
 """The declarative spec format and reference-relative comparison."""
 
+import shutil
 import textwrap
 
 import pytest
@@ -176,7 +177,14 @@ class TestDiscovery:
 
 
 class TestMultiValueNaming:
+    # This one genuinely shells out to Rscript, so it cannot run where R is
+    # absent. The repo's existing idiom for that is tests/test_r_helpers.py:16.
+    # This test predated CI and so had never met a machine without R; it failed
+    # rather than skipped on the very first CI run, which is the right order of
+    # discovery. The skip is declared because the dependency is real, not to
+    # make a red check go away.
     @pytest.mark.slow
+    @pytest.mark.skipif(shutil.which("Rscript") is None, reason="R is not installed")
     def test_both_languages_name_multi_valued_results_the_same_way(self, tmp_path):
         """R names a vector with c(a=, b=) and Python with a dict.
 

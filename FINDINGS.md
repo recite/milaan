@@ -85,7 +85,7 @@ the language's most-used stats package, and the direction.
 | **Warns?** | No |
 
 ```python
-proportion_confint(0, 20)   # -> (0.0, 0.0)
+proportion_confint(0, 20)  # -> (0.0, 0.0)
 ```
 
 Zero successes in twenty trials and the interval is a **point** — it asserts the

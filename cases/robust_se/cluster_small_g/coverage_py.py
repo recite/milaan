@@ -103,8 +103,10 @@ def test_statsmodels_cluster_interval_covers_with_few_clusters() -> None:
 if __name__ == "__main__":
     header = "".join(f"{f'G={g}':>8}" for g in GRID)
     print(f"{'method':<32}{header}")
-    for label, use_t in (("statsmodels cluster + z", False),
-                         ("statsmodels cluster + t_{G-1}", True)):
+    for label, use_t in (
+        ("statsmodels cluster + z", False),
+        ("statsmodels cluster + t_{G-1}", True),
+    ):
         rates = [study(g, use_t).coverage for g in GRID]
         print(f"{label:<32}" + "".join(f"{r:>8.3f}" for r in rates))
     low, high = binomial_band(0.95, REPS)
