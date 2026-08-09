@@ -56,7 +56,9 @@ def rows_for(data: dict, n_units: int) -> list[dict]:
     Returns:
         list: The replicate records.
     """
-    return [r for r in data["replicates"] if r["n_units"] == n_units and not r["failed"]]
+    return [
+        r for r in data["replicates"] if r["n_units"] == n_units and not r["failed"]
+    ]
 
 
 def cell(data: dict, n_units: int, se: str = "cluster") -> MonteCarloResult:
@@ -152,8 +154,7 @@ if __name__ == "__main__":
     print(f"{data['probe']}  |  fixest {env['fixest']}, {env['r']}")
     print(f"nominal {data['level']}, {data['reps_per_cell']} replicates per cell\n")
     print(
-        f"{'units':>6}{'truth':>8}{'sunab':>9}{'bias':>9}"
-        f"{'TWFE':>9}{'TWFE bias':>11}"
+        f"{'units':>6}{'truth':>8}{'sunab':>9}{'bias':>9}{'TWFE':>9}{'TWFE bias':>11}"
     )
     for n in data["grid"]:
         rows = rows_for(data, n)
