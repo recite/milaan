@@ -84,9 +84,17 @@ if (file.exists(path)) {
   prev <- jsonlite::fromJSON(path, simplifyVector = FALSE)
   if (!is.null(prev$cells_done) && length(prev$cells_done)) {
     cells_done <- as.numeric(unlist(prev$cells_done))
-    rows <- prev$replicates
-    cat(sprintf("resuming: cells %s already done, %d replicates on disk\n",
-                paste(cells_done, collapse = ","), length(rows)))
+    ## Keep ONLY rows from completed cells. A partially-written cell is re-run
+    ## from the start, so carrying its rows forward would append a second batch
+    ## on top and silently double-count those replicates -- inflating the cell
+    ## and, because coverage is a mean over rows, quietly biasing its rate
+    ## toward whatever the interrupted run happened to produce.
+    kept <- Filter(function(x) as.numeric(x$n) %in% cells_done, prev$replicates)
+    dropped <- length(prev$replicates) - length(kept)
+    rows <- kept
+    cat(sprintf(
+      "resuming: cells %s complete, %d replicates kept, %d from a partial cell discarded\n",
+      paste(cells_done, collapse = ","), length(rows), dropped))
   }
 }
 
