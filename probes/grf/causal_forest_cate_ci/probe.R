@@ -61,12 +61,14 @@ path <- if (length(args)) args[1] else "results.json.gz"
 ## hung -- which is exactly the shape of failure this repository documents in
 ## other people's code. Partial output is not a nicety here: it is what makes
 ## the difference observable.
-flush_out <- function(rows, cells_done) {
+flush_out <- function(rows) {
+  ns <- vapply(rows, function(x) as.numeric(x$n), 0)
+  done <- vapply(PLAN, function(p) sum(ns == p$n) >= p$reps, TRUE)
   out <- list(
     probe = "grf/causal_forest_cate_ci", level = 0.95, seed = SEED,
     dimension = DIM, num_trees = NUM_TREES, x1_test = X1_TEST, truth = truth,
-    ate_truth = 2.0, complete = identical(cells_done, vapply(PLAN, `[[`, 0, "n")),
-    cells_done = cells_done,
+    ate_truth = 2.0, complete = all(done),
+    cells_done = vapply(PLAN, `[[`, 0, "n")[done],
     plan = lapply(PLAN, function(p) list(n = p$n, reps = p$reps)),
     env = list(r = R.version.string, grf = as.character(packageVersion("grf"))),
     replicates = rows
@@ -76,42 +78,48 @@ flush_out <- function(rows, cells_done) {
   close(con)
 }
 
-## Resume: whole cells already on disk are not re-run. A probe that has been
-## interrupted three times should not start from zero a fourth.
+## Resume at REPLICATE granularity, not cell granularity.
+##
+## Per-cell resume was still too coarse: this probe has now been killed four
+## times, always mid-cell, so every attempt discarded that cell and restarted
+## it. Progress never accumulated.
+##
+## Resuming inside a cell is only sound if a replicate does not depend on the
+## draws before it, so each one seeds itself from (SEED, n, r) and nothing
+## else. That is simcheck's own rule for its runner, and the reason is the same:
+## replicate r is then reproducible on its own, and an interrupted run rejoins
+## exactly where it stopped rather than approximately.
 rows <- list()
-cells_done <- numeric(0)
+done_counts <- list()
 if (file.exists(path)) {
   prev <- jsonlite::fromJSON(path, simplifyVector = FALSE)
-  if (!is.null(prev$cells_done) && length(prev$cells_done)) {
-    cells_done <- as.numeric(unlist(prev$cells_done))
-    ## Keep ONLY rows from completed cells. A partially-written cell is re-run
-    ## from the start, so carrying its rows forward would append a second batch
-    ## on top and silently double-count those replicates -- inflating the cell
-    ## and, because coverage is a mean over rows, quietly biasing its rate
-    ## toward whatever the interrupted run happened to produce.
-    kept <- Filter(function(x) as.numeric(x$n) %in% cells_done, prev$replicates)
-    dropped <- length(prev$replicates) - length(kept)
-    rows <- kept
-    cat(sprintf(
-      "resuming: cells %s complete, %d replicates kept, %d from a partial cell discarded\n",
-      paste(cells_done, collapse = ","), length(rows), dropped))
+  if (!is.null(prev$replicates) && length(prev$replicates)) {
+    rows <- prev$replicates
+    ns <- vapply(rows, function(x) as.numeric(x$n), 0)
+    for (nn in unique(ns)) done_counts[[as.character(nn)]] <- sum(ns == nn)
+    cat(sprintf("resuming: %d replicates on disk (%s)\n", length(rows),
+                paste(sprintf("n=%s:%d", names(done_counts),
+                              unlist(done_counts)), collapse = ", ")))
   }
 }
 
-set.seed(SEED)
 for (cellspec in PLAN) {
   n <- cellspec$n
-  if (n %in% cells_done) {
-    cat(sprintf("skipping n=%d, already complete\n", n))
+  already <- done_counts[[as.character(n)]]
+  already <- if (is.null(already)) 0 else already
+  if (already >= cellspec$reps) {
+    cat(sprintf("skipping n=%d, %d/%d already done\n", n, already, cellspec$reps))
     next
   }
   t_cell <- Sys.time()
-  for (r in seq_len(cellspec$reps)) {
+  for (r in seq(already + 1, cellspec$reps)) {
+    ## Replicate r is a function of (SEED, n, r) alone.
+    set.seed(SEED + 7919L * as.integer(log2(n) * 100) + r)
     ## Flushed on the same cadence as the progress line, not only per cell. The
     ## previous version flushed per cell and was killed inside the first one,
     ## losing everything -- coarse checkpointing is the same defect as none.
     if (r %% 25 == 0) {
-      flush_out(rows, cells_done)
+      flush_out(rows)
       cat(sprintf("n=%d  %d/%d  %.1f min elapsed in cell\n", n, r, cellspec$reps,
                   as.numeric(Sys.time() - t_cell, units = "mins")))
       flush.console()
@@ -135,8 +143,7 @@ for (cellspec in PLAN) {
   }
   ## The ATE estimand is 1 + 2*E[x1] = 2 exactly for x1 ~ Uniform(0,1); it is
   ## stamped into the output by flush_out.
-  cells_done <- c(cells_done, n)
-  flush_out(rows, cells_done)
+  flush_out(rows)
   cat(sprintf("cell n=%d done in %.1f min; %d replicates written\n",
               n, as.numeric(Sys.time() - t_cell, units = "mins"), length(rows)))
   flush.console()
