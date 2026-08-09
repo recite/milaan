@@ -50,6 +50,9 @@ convention = "google"
 # interface, they are not importable modules, and they must put the helper
 # library on sys.path before importing it -- which is what E402 objects to.
 "cases/**" = ["T20", "S", "D", "N", "INP", "E402"]
+# Probes are the same kind of artifact: a script whose printed table is its
+# interface, plus assertions that gate the claim.
+"probes/**" = ["T20", "S", "D", "N", "INP", "E402"]
 "backends/**" = ["T20", "S", "D", "N", "INP", "E402"]
 "src/milaan/lib/**" = ["T20", "S", "D", "N", "INP"]
 "datasets/**" = ["T20", "INP"]

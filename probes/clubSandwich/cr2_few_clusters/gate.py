@@ -32,7 +32,8 @@ def load() -> dict:
     """
     if not RESULTS.exists():
         raise FileNotFoundError(
-            f"{RESULTS} missing -- run `Rscript --vanilla {HERE / 'probe.R'} {RESULTS}` first"
+            f"{RESULTS} missing -- run "
+            f"`Rscript --vanilla {HERE / 'probe.R'} {RESULTS}` first"
         )
     return json.loads(RESULTS.read_text())
 
