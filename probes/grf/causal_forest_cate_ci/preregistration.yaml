@@ -1,0 +1,131 @@
+# Committed before the probe runs. See ../../PROTOCOL.md §2.
+id: grf/causal_forest_cate_ci
+tier: B
+role: target
+
+target:
+  package: grf
+  version_at_registration: "2.6.1"
+  entrypoint: "causal_forest(X, Y, W, W.hat = 0.5); predict(cf, X_test, estimate.variance = TRUE)"
+  method_year: 2018
+
+usage_evidence: >
+  Not in data/sampling_frame.csv, which lags recent methods (QUEUE.md). Attested
+  instead by: grf is the reference implementation of the causal forest, it is
+  the standard tool for heterogeneous treatment effects in applied economics and
+  policy evaluation, and its pointwise confidence intervals are used routinely
+  in published subgroup analysis. If that attestation is judged too weak the
+  probe should be dropped rather than argued harder.
+
+claim:
+  quote: >
+    "we show that causal forests are pointwise consistent for the true treatment
+    effect, and have an asymptotically Gaussian and centered sampling
+    distribution ... we propose an estimator for their asymptotic variance that
+    enables valid confidence intervals"
+  source: >
+    Wager & Athey (2018), "Estimation and Inference of Heterogeneous Treatment
+    Effects using Random Forests", JASA 113(523). Implemented in grf per Athey,
+    Tibshirani & Wager (2019), Annals of Statistics 47(2).
+  operationalised: >
+    Two claims, gated separately.
+    (a) POINTWISE: at a fixed covariate value x, the interval
+        predictions +/- 1.96*sqrt(variance.estimates) contains tau(x) 95% of the
+        time across replicates. This is the delicate claim and the reason for
+        the probe.
+    (b) ATE: average_treatment_effect(cf) gives a 95% interval containing the
+        true average effect 95% of the time. This is the well-behaved
+        doubly-robust quantity and functions as an internal control -- if it
+        also failed, suspicion should fall on the harness first.
+
+dgp:
+  description: >
+    Randomised treatment with known propensity, so unconfoundedness and overlap
+    hold by construction rather than by assumption. Covariates uniform on the
+    unit cube. The treatment effect varies smoothly in one coordinate; the
+    remaining coordinates are noise the forest must not be fooled by.
+  truth: "tau(x) = 1 + 2*x1, evaluated at the fixed test points below"
+  functions:
+    baseline: "m(x) = 2*x2"
+    effect: "tau(x) = 1 + 2*x1"
+    outcome: "Y = m(X) + (W - 0.5)*tau(X) + N(0, 0.5)"
+  propensity: "W ~ Bernoulli(0.5), passed to the forest as W.hat = 0.5"
+  dimension: 10
+  test_points: "x1 in {0.1, 0.3, 0.5, 0.7, 0.9}, all other coordinates 0.5"
+
+# Coverage is evaluated separately at each test point. Within one replicate the
+# five predictions are dependent, so pooling them would understate the variance
+# of the coverage estimate; across replicates at a FIXED point they are
+# independent, which is a proper binomial and what simcheck's band assumes.
+accounting:
+  unit: "one replicate, at one fixed test point"
+  rationale: "predictions at different x within a replicate are correlated"
+
+assumptions:
+  - condition: "unconfoundedness"
+    satisfied_by: "treatment is randomised independently of potential outcomes"
+    executable: true
+  - condition: "overlap"
+    satisfied_by: "propensity is exactly 0.5 everywhere, and is supplied to the forest"
+    executable: true
+  - condition: "honest splitting"
+    satisfied_by: "grf's honesty argument defaults to TRUE and is left at the default"
+    executable: true
+  - condition: "the treatment effect function is Lipschitz / smoothly varying"
+    satisfied_by: "tau is linear in one coordinate"
+    executable: false
+  - condition: "subsampling rate conditions on the forest"
+    satisfied_by: "grf's defaults, which is what an applied user gets"
+    executable: false
+    note: >
+      This is the assumption most likely to be doing the work. The theory needs
+      the subsample rate to shrink fast enough that the bias is dominated by the
+      standard error. Applied users never set it. Probing the defaults is the
+      point rather than a shortcut, but the verdict must say that the defaults
+      -- not the theorem -- are what was tested.
+
+instrument_sensitivity:
+  requirement: >
+    The true effect must vary enough across the test points that a
+    constant-effect estimator would be badly wrong; otherwise the pointwise
+    claim reduces to the ATE claim and is not separately tested. With
+    tau ranging 1.2 to 2.8 against a residual sd of 0.5, this is met by
+    construction, and the probe asserts the true values differ across test
+    points rather than assuming it.
+  if_unmet: "UNINFORMATIVE"
+
+sweep:
+  n: [500, 2000, 8000]
+
+study:
+  reps: {500: 1000, 2000: 600, 8000: 300}
+  reps_note: >
+    Deliberately unequal. A causal forest costs about 1.1s at n=1500, so equal
+    replication would spend the entire budget on the largest cell. simcheck's
+    band is derived from the replicate count, so unequal reps are handled
+    correctly and simply mean the largest cell is judged with a wider band --
+    which is stated in the output rather than hidden.
+  seed: 20260808
+  num_trees: 2000
+  gate: "simcheck.assert_coverage(result, 0.95)"
+  also_reported: >
+    Mean interval width and mean absolute bias at each test point, plus the ATE
+    arm. Width matters here specifically: pointwise forest intervals can be made
+    to cover by growing them, and coverage alone cannot tell that apart from
+    getting the variance right.
+
+prediction:
+  verdict: FAILS
+  detail: >
+    Pointwise CATE coverage expected to fall below nominal at every n, worst at
+    the boundary test points x1 = 0.1 and 0.9 where the forest smooths across a
+    one-sided neighbourhood and the bias does not vanish relative to the
+    standard error. I expect improvement with n but not convergence to 0.95
+    within this sweep. The ATE arm expected to hold throughout.
+    Recording this as FAILS rather than SLOW requires the sweep to show it not
+    approaching nominal; if it is clearly climbing toward 0.95, SLOW is the
+    honest verdict and the n at which it arrives is the finding.
+  falsifier: >
+    Pointwise coverage inside the band at all test points and all n, with the
+    sensitivity condition met. That would make this a HOLDS and a useful public
+    good, given how much the folklore says otherwise.
