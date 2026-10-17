@@ -65,7 +65,7 @@ def cell(data: dict, n_units: int, se: str = "cluster") -> MonteCarloResult:
     """Assemble one panel size into a result simcheck can gate.
 
     The truth varies slightly by replicate because it is computed from the
-    realised treated cells, so coverage is evaluated per replicate against its
+    realized treated cells, so coverage is evaluated per replicate against its
     own truth and ``MonteCarloResult.truth`` carries the common mean.
 
     Args:

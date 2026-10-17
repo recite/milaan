@@ -35,5 +35,5 @@ finding:
     reproducibility. It is not: R's own sample() has a discontinuity at 3.6.0, so
     a script from 2018 and the same script today disagree. What makes this
     tractable rather than archaeological is that current R still ships the old
-    behaviour behind a flag, so both sides are measurable in one interpreter --
+    behavior behind a flag, so both sides are measurable in one interpreter --
     the same trick the lfe record in kasauti turns on.

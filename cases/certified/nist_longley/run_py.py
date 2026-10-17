@@ -60,8 +60,8 @@ def body(data_path):
         residuals = y - design @ beta
         dof = len(y) - design.shape[1]
         residual_sd = float(np.sqrt(residuals @ residuals / dof))
-        centred = y - y.mean()
-        r_squared = float(1.0 - (residuals @ residuals) / (centred @ centred))
+        centered = y - y.mean()
+        r_squared = float(1.0 - (residuals @ residuals) / (centered @ centered))
 
     quantities = {f"coef.b{i}": float(beta[i]) for i in range(7)}
     quantities["residual.sd"] = residual_sd

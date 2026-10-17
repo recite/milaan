@@ -36,7 +36,7 @@ finding:
   reconcilable: true
   reconciliation: "scipy: equal_var=False, or R: var.equal=TRUE -- pick a direction and say so"
   note: >
-    The most quietly dangerous entry in the catalogue so far, because nothing
+    The most quietly dangerous entry in the catalog so far, because nothing
     about the call sites differs. `t.test(a, b)` and `ttest_ind(a, b)` look like
     translations of each other and are not. The gap widens exactly where the
     assumption matters -- unequal group sizes with unequal spread -- so it is

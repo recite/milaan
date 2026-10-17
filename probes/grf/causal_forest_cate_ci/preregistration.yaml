@@ -40,7 +40,7 @@ claim:
 
 dgp:
   description: >
-    Randomised treatment with known propensity, so unconfoundedness and overlap
+    Randomized treatment with known propensity, so unconfoundedness and overlap
     hold by construction rather than by assumption. Covariates uniform on the
     unit cube. The treatment effect varies smoothly in one coordinate; the
     remaining coordinates are noise the forest must not be fooled by.
@@ -63,7 +63,7 @@ accounting:
 
 assumptions:
   - condition: "unconfoundedness"
-    satisfied_by: "treatment is randomised independently of potential outcomes"
+    satisfied_by: "treatment is randomized independently of potential outcomes"
     executable: true
   - condition: "overlap"
     satisfied_by: "propensity is exactly 0.5 everywhere, and is supplied to the forest"

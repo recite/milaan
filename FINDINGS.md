@@ -136,7 +136,7 @@ are not equivalent: the R default is better by about six points.
 
 Separately, *every* variant under-covers, and slowly: 0.790 at T=100, 0.880 at
 T=1000, still **0.903 at T=4000**. That part is textbook finite-sample HAC
-behaviour (Andrews 1991; Kiefer & Vogelsang 2002) — the contribution is the
+behavior (Andrews 1991; Kiefer & Vogelsang 2002) — the contribution is the
 rate, not the existence.
 
 ---

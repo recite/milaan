@@ -29,4 +29,4 @@ finding:
     more than one definition -- summing tables no more likely than the observed
     one, doubling the smaller tail, and others -- and R and scipy could easily
     have picked differently. On a 2x2 they did not. Larger tables are outside
-    scipy's fisher_exact entirely, so the agreement does not generalise by size.
+    scipy's fisher_exact entirely, so the agreement does not generalize by size.

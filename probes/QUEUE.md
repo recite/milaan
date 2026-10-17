@@ -44,7 +44,7 @@ and which we argued in.
 
 Not queued, with reasons: `felm` (41), `feols` (79), `coeftest` (76), `vcovHC`
 (111), `vcovCL` (203), `lmer` (207) — all heavily used and all failing criterion
-3. These are settled estimators whose behaviour is textbook. `feols` and `vcovHC`
+3. These are settled estimators whose behavior is textbook. `feols` and `vcovHC`
 did produce default-class results this session; those are logged in
 `../FINDINGS.md` and are deliberately not part of this corpus.
 

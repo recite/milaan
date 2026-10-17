@@ -23,7 +23,7 @@ implementations:
       numpy's default is the population standard deviation, ddof=0, where R's
       sd is the sample one. On eight observations that is a 6.5 percent gap in
       every standard deviation, every standard error built from one, and every
-      standardised variable. Nothing warns.
+      standardized variable. Nothing warns.
   np_std_ddof:
     lang: Python
     expr: "np.std(x, ddof=1)"

@@ -9,7 +9,7 @@ taxonomy exists to remove.
 
 ## What was measured
 
-Randomised treatment with known propensity, ten covariates, effect
+Randomized treatment with known propensity, ten covariates, effect
 `tau(x) = 1 + 2·x1` varying in one coordinate, 2000 trees, grf's honesty
 default. 1320 replicates. grf 2.6.1.
 
@@ -39,12 +39,12 @@ column says why:
 
 The bias is symmetric and points inward: **positive where the true effect is
 smallest, negative where it is largest**. A forest at x1 = 0.1 can only average
-over neighbours on one side, and those neighbours have larger effects, so the
+over neighbors on one side, and those neighbors have larger effects, so the
 estimate is pulled up. At x1 = 0.9 it is pulled down. Interior points have
-neighbours on both sides and the pulls cancel.
+neighbors on both sides and the pulls cancel.
 
 At n = 500 the bias at the boundary is 0.179 against a true effect of 1.2, and
-the interval is centred 0.179 away from the truth while being sized for
+the interval is centered 0.179 away from the truth while being sized for
 sampling error alone. That is why coverage is 0.63.
 
 ## Why `SLOW` rather than `FAILS`

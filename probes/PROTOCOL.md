@@ -12,7 +12,7 @@ truth we set ourselves, over many datasets, at several sample sizes.
 The obvious way to do this work is also the way that makes it worthless: probe
 twenty methods, write up the three that failed, and present the result as a
 finding about statistical software. That is the same selection pathology the
-work would be criticising, and a reader cannot distinguish it from an honest
+work would be criticizing, and a reader cannot distinguish it from an honest
 survey after the fact.
 
 Everything below exists to make that impossible, and to make the absence of it

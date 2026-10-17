@@ -24,7 +24,7 @@ implementations:
     expect: DIVERGE
     reason: >
       1.371, -0.565, 0.363 against 0.497, -0.138, 0.648. Both are Mersenne
-      Twister; they differ in how the seed initialises the state and in how
+      Twister; they differ in how the seed initializes the state and in how
       uniforms become normals -- R inverts the normal CDF, numpy's legacy
       generator uses a polar method. Nothing is wrong and nothing can be passed
       to fix it.

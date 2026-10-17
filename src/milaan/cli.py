@@ -14,7 +14,7 @@ from milaan.runner import DEFAULT_TIMEOUT, run_case
 
 ROOT = Path(__file__).resolve().parents[2]
 
-#: Where comparisons live. `specs/` holds the declarative catalogue -- one YAML
+#: Where comparisons live. `specs/` holds the declarative catalog -- one YAML
 #: per procedure, no backend scripts -- and `cases/` holds the handful that need
 #: real setup code and so are written out longhand.
 CASE_ROOTS = [ROOT / "specs", ROOT / "cases"]
@@ -116,7 +116,7 @@ def run(
 @click.option("--language", type=click.Choice(["R", "Python"]), default="R")
 @click.option("--top", type=int, default=30, show_default=True)
 def coverage(cases_dir: Path | None, frame: Path, language: str, top: int) -> None:
-    """Check the catalogue against what replication archives actually call.
+    """Check the catalog against what replication archives actually call.
 
     Args:
         cases_dir: Directory holding comparisons.

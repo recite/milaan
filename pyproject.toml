@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "milaan"
 version = "0.1.0"
-description = "Do R and Python agree? A measured catalogue of where equivalent-looking statistical calls disagree, and what it takes to reconcile them."
+description = "Do R and Python agree? A measured catalog of where equivalent-looking statistical calls disagree, and what it takes to reconcile them."
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Gaurav Sood", email = "gsood07@gmail.com" }]
@@ -109,3 +109,8 @@ test = [
 style = "google"
 arg-type-hints-in-docstring = false
 check-return-types = false
+
+[tool.codespell]
+# R package names.
+ignore-words-list = "aer"
+builtin = "clear,rare,en-GB_to_en-US"

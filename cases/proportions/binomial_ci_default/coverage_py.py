@@ -125,7 +125,7 @@ def test_the_default_interval_is_degenerate_at_zero_successes() -> None:
     """The mechanism, stated separately from the coverage number it produces.
 
     Observe no successes in twenty trials and the default returns ``(0.0, 0.0)``
-    -- zero width. It is not a wide interval or a badly centred one; it asserts
+    -- zero width. It is not a wide interval or a badly centered one; it asserts
     that the proportion is exactly zero, with 95% confidence, from twenty
     observations. Nothing warns. R's ``binom.test(0, 20)`` gives [0, 0.168].
     """

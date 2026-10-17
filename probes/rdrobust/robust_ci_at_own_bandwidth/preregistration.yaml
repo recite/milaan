@@ -44,7 +44,7 @@ dgp:
 
 assumptions:
   - condition: "running variable continuous at the cutoff, with positive density there"
-    satisfied_by: "truncated normal centred at the cutoff"
+    satisfied_by: "truncated normal centered at the cutoff"
     executable: true
   - condition: "conditional expectation functions smooth away from the cutoff"
     satisfied_by: "cubic polynomials on each side, no kinks within the support"

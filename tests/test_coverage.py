@@ -1,4 +1,4 @@
-"""Checking the catalogue against what replication archives actually call."""
+"""Checking the catalog against what replication archives actually call."""
 
 import pytest
 

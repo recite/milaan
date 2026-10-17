@@ -230,9 +230,9 @@ def render(runs: list[CaseRun]) -> str:
 
 
 def render_porting_table(runs: list[CaseRun]) -> list[str]:
-    """Summarise every documented finding as porting advice.
+    """Summarize every documented finding as porting advice.
 
-    The point of the catalogue rather than a by-product of it: someone
+    The point of the catalog rather than a by-product of it: someone
     reimplementing an R analysis in Python wants one table telling them which
     calls need an argument and which cannot be ported at all. Everything here is
     asserted elsewhere in the report -- each reconciliation is a comparison that

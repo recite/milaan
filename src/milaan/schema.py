@@ -171,7 +171,7 @@ class Invariant:
 
 #: Why two implementations of the same procedure disagree. "They differ" is not
 #: a finding; this is the field that makes it one, and the five values are
-#: deliberately exhaustive over what the catalogue has met so far.
+#: deliberately exhaustive over what the catalog has met so far.
 #:
 #: * `DEFINITION` -- they compute different quantities. `sd` divides by `n-1`,
 #:   `np.std` by `n`. Neither is wrong; they are not the same function.

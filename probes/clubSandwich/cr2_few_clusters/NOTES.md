@@ -57,7 +57,7 @@ the width column above is computed in `gate.py` by hand.
 ## What this is and is not
 
 Pustejovsky and Tipton (2018) claim Type I error "close to nominal ... even when
-the number of clusters is small". At G=5 the realised size is 0.024 against a
+the number of clusters is small". At G=5 the realized size is 0.024 against a
 nominal 0.05 — a factor of two conservative. That is a deviation from the claim
 as quoted, in the safe direction, and it costs power rather than validity. It is
 also **not news**: the paper's own simulations show the correction erring
