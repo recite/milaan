@@ -63,6 +63,7 @@ def coverage(n_obs: int, reps: int = REPS, seed: int = 7) -> tuple[int, float]:
 
 @pytest.mark.xfail(
     strict=True,
+    raises=AssertionError,
     reason=(
         "The finding. Kernel HAC standard errors are consistent, not unbiased, "
         "and their nominal level is a large-sample promise. At T=1000 -- which "

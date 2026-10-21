@@ -29,7 +29,7 @@ GRID_N = (20, 50, 100, 200, 500, 1000)
 GRID_P = (0.5, 0.2, 0.05, 0.01)
 
 
-def interval(x: int, n: int, method: str) -> tuple[float, float]:
+def interval(x: int, n: int, method: str | None = None) -> tuple[float, float]:
     """One interval, as a pair of plain floats.
 
     ``proportion_confint`` is typed for its array-input overload, so pin the
@@ -38,14 +38,16 @@ def interval(x: int, n: int, method: str) -> tuple[float, float]:
     Args:
         x: Observed successes.
         n: Number of trials.
-        method: A ``proportion_confint`` method name.
+        method: A method name, or ``None`` to exercise the library default.
 
     Returns:
         tuple: Lower and upper endpoints.
     """
-    low, high = np.asarray(
-        proportion_confint(x, n, alpha=1 - NOMINAL, method=method), dtype=float
-    )
+    if method is None:
+        bounds = proportion_confint(x, n, alpha=1 - NOMINAL)
+    else:
+        bounds = proportion_confint(x, n, alpha=1 - NOMINAL, method=method)
+    low, high = np.asarray(bounds, dtype=float)
     return float(low), float(high)
 
 
@@ -55,7 +57,7 @@ def exact_coverage(n: int, p: float, method: str) -> float:
     Args:
         n: Number of trials.
         p: True success probability.
-        method: A ``proportion_confint`` method name.
+        method: A method name, or ``None`` to exercise the library default.
 
     Returns:
         float: The probability that the interval contains ``p``.
@@ -68,13 +70,15 @@ def exact_coverage(n: int, p: float, method: str) -> float:
     return covered
 
 
-def study(n: int, p: float, method: str, reps: int = REPS) -> MonteCarloResult:
+def study(
+    n: int, p: float, method: str | None = None, reps: int = REPS
+) -> MonteCarloResult:
     """Simulate the same quantity, so the two routes can be compared.
 
     Args:
         n: Number of trials.
         p: True success probability.
-        method: A ``proportion_confint`` method name.
+        method: A method name, or ``None`` to exercise the library default.
         reps: Replicate count; the gate's tolerance is derived from it.
 
     Returns:
@@ -129,17 +133,18 @@ def test_the_default_interval_is_degenerate_at_zero_successes() -> None:
     that the proportion is exactly zero, with 95% confidence, from twenty
     observations. Nothing warns. R's ``binom.test(0, 20)`` gives [0, 0.168].
     """
-    assert interval(0, 20, "normal") == (0.0, 0.0)
-    assert interval(20, 20, "normal") == (1.0, 1.0)
+    assert interval(0, 20) == (0.0, 0.0)
+    assert interval(20, 20) == (1.0, 1.0)
 
 
 @pytest.mark.xfail(
     strict=True,
+    raises=AssertionError,
     reason=(
         "The finding. proportion_confint defaults to method='normal' (Wald), "
         "which returns (0.0, 0.0) at zero successes and covers 0.182 at "
-        "p=0.01, n=20. strict=True so that if statsmodels ever changes the "
-        "default the test starts passing and CI fails, forcing a rewrite."
+        "p=0.01, n=20. strict=True flags newly nominal coverage; the unmarked "
+        "endpoint test also detects default changes that still miss this gate."
     ),
 )
 def test_statsmodels_default_binomial_interval_covers() -> None:
@@ -152,9 +157,7 @@ def test_statsmodels_default_binomial_interval_covers() -> None:
     the way it would be written if the claim held, so the failure carries the
     measured rate.
     """
-    assert_coverage(
-        study(20, 0.01, "normal"), NOMINAL, label="statsmodels default, n=20 p=0.01"
-    )
+    assert_coverage(study(20, 0.01), NOMINAL, label="statsmodels default, n=20 p=0.01")
 
 
 if __name__ == "__main__":

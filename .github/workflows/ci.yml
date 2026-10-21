@@ -22,17 +22,17 @@ jobs:
   ci:
     uses: gojiplus/py-canon/.github/workflows/reusable-ci.yml@v1
     with:
-      python-versions: '["3.12", "3.13"]'
+      python-versions: '["3.11", "3.12", "3.13"]'
       os: '["ubuntu-latest"]'
       wheel-import: milaan
       coverage-floor: 0
+      # This research corpus has not adopted the py-canon package template.
+      # Ruff, Pyright, pydoclint, tests, and wheel validation still run.
+      run-preen: false
 
-  # The R companions under cases/ are committed source that nothing has ever
-  # executed in CI. Running them properly would mean installing sandwich,
-  # lmtest, estimatr, fixest, rdrobust, grf and clubSandwich and re-deriving
-  # numbers that are already recorded in NOTES.md -- twenty minutes a push to
-  # learn nothing. A parse check is cheap and catches the failure that actually
-  # happens to committed scripts nobody runs: a syntax error.
+  # Python gates recheck the committed per-replicate R results. Regenerating
+  # the long simulations requires a separately registered run; this job checks
+  # the companion source for syntax errors without changing that evidence.
   r-parse:
     name: R companions parse
     runs-on: ubuntu-latest
@@ -40,11 +40,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: r-lib/actions/setup-r@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
           use-public-rspm: true
 

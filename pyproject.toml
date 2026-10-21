@@ -109,6 +109,7 @@ test = [
 style = "google"
 arg-type-hints-in-docstring = false
 check-return-types = false
+exclude = '\.venv|tests'
 
 [tool.codespell]
 # R package names.

@@ -87,8 +87,11 @@ uv run python probes/grf/causal_forest_cate_ci/gate.py   # the tables
 uv run pytest probes/grf/causal_forest_cate_ci/gate.py   # the gates
 ```
 
-The sensitivity gate passes; the CATE gate fails at the boundary points, and the
-ATE gate fails only at n = 500.
+The sensitivity gate passes. Each sample-size/test-point cell is collected
+separately: strict expected failures record CATE undercoverage at x1 = 0.1 and
+0.9 for n = 500 and 2000, and the ATE miss at n = 500. All other cells must pass.
+Unexpected passes and runtime errors fail CI. These gates check the committed
+R results; testing a newer grf version requires a separately registered rerun.
 
 ## A process note worth keeping
 

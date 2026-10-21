@@ -80,6 +80,7 @@ def study(n_clusters: int, use_t: bool, seed: int = 11) -> MonteCarloResult:
 
 @pytest.mark.xfail(
     strict=True,
+    raises=AssertionError,
     reason=(
         "The finding. statsmodels cov_type='cluster' is CR1 with a normal "
         "critical value and covers 0.730 at G=5, where estimatr's CR2 covers "

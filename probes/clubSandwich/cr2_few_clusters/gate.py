@@ -108,6 +108,7 @@ def test_cr2_satterthwaite_covers_from_ten_clusters_up() -> None:
 
 @pytest.mark.xfail(
     strict=True,
+    raises=AssertionError,
     reason=(
         "Recorded, not hidden. CR2 covers 0.9765 at five clusters against a "
         "nominal 0.95 -- conservative, not invalid, and it buys that coverage "
