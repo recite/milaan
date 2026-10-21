@@ -84,7 +84,7 @@ def _parse_finding(raw: dict[str, Any] | None, case_id: str) -> Finding | None:
         The finding, or None when the spec documents none.
 
     Raises:
-        CaseError: If the cause is unrecognised, or a disagreement is claimed
+        CaseError: If the cause is unrecognized, or a disagreement is claimed
             reconcilable without saying how.
     """
     if not raw:

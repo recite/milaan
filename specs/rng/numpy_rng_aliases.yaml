@@ -49,7 +49,7 @@ finding:
   reconciliation: "nothing to do; these are four spellings of one generator"
   note: >
     The necessary companion to seeded_streams, and the reason its finding is not
-    an artefact of which numpy API was chosen. `randn`, `standard_normal`,
+    an artifact of which numpy API was chosen. `randn`, `standard_normal`,
     `normal(0, 1)`, and a `RandomState` object all draw from the same
     Mersenne-Twister state in the same order, and so do `rand`, `random`, and
     `uniform(0, 1)`. Every one of these is byte-identical to the others.

@@ -1,4 +1,4 @@
-"""Check the catalogue against what replication archives actually call.
+"""Check the catalog against what replication archives actually call.
 
 The claim this module exists to keep honest: comparisons are chosen by usage, not
 by taste. That is easy to assert in a README and easy to drift away from, since
@@ -29,7 +29,7 @@ from milaan.schema import CaseSpec
 #: because they are genuinely ubiquitous and partly because several CRAN packages
 #: re-export base R's, so the frame credits them to `Matrix` or `raster`.
 #:
-#: Excluded from the coverage denominator, not from the catalogue: a spec about
+#: Excluded from the coverage denominator, not from the catalog: a spec about
 #: `nrow` would agree trivially and teach nothing, and counting it as an uncovered
 #: procedure makes the work queue look longer than it is. Coercion, reshaping,
 #: indexing, counting, and plotting only -- anything that estimates a quantity
@@ -208,7 +208,7 @@ def load_frame(path: Path) -> list[Procedure]:
 
 @dataclass
 class Coverage:
-    """What the catalogue reaches, and what it does not.
+    """What the catalog reaches, and what it does not.
 
     Attributes:
         procedures: The ranking, annotated with which comparisons cover each.

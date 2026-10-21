@@ -16,6 +16,7 @@ Run as a script it prints the tables in NOTES.md; run under pytest it asserts.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from scipy.stats import ttest_ind
 from simcheck import assert_count_rate
 
@@ -24,7 +25,9 @@ REPS = 20000
 SEED = 5
 
 
-def rejections(n1: int, n2: int, sd1: float, sd2: float, *, equal_var: bool) -> int:
+def rejections(
+    n1: int, n2: int, sd1: float, sd2: float, *, equal_var: bool | None = None
+) -> int:
     """How many of ``REPS`` replicates reject, with the null true in every one.
 
     Both groups are drawn with mean zero, so every rejection is a false
@@ -36,7 +39,7 @@ def rejections(n1: int, n2: int, sd1: float, sd2: float, *, equal_var: bool) -> 
         sd1: Standard deviation of the first group.
         sd2: Standard deviation of the second group.
         equal_var: ``True`` for the pooled Student test scipy defaults to,
-            ``False`` for Welch, which is what R defaults to.
+            ``False`` for Welch, or ``None`` to exercise SciPy's actual default.
 
     Returns:
         int: Number of replicates rejecting at ``ALPHA``.
@@ -46,7 +49,10 @@ def rejections(n1: int, n2: int, sd1: float, sd2: float, *, equal_var: bool) -> 
     b = rng.normal(0.0, sd2, (REPS, n2))
     # Unpacked rather than reached for by attribute: the scipy stub does not
     # declare `.pvalue` on TtestResult, while the tuple interface is stable.
-    _statistic, pvalues = ttest_ind(a, b, axis=1, equal_var=equal_var)
+    if equal_var is None:
+        _statistic, pvalues = ttest_ind(a, b, axis=1)
+    else:
+        _statistic, pvalues = ttest_ind(a, b, axis=1, equal_var=equal_var)
     return int((np.asarray(pvalues) < ALPHA).sum())
 
 
@@ -82,6 +88,24 @@ def test_welch_holds_its_size_when_the_assumption_is_not_met() -> None:
     )
 
 
+def test_scipy_default_still_matches_the_documented_pooled_test() -> None:
+    """A changed default must be reviewed even if its size also misses the gate."""
+    assert rejections(10, 100, 4.0, 1.0) == rejections(
+        10, 100, 4.0, 1.0, equal_var=True
+    )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason=(
+        "The finding. scipy.stats.ttest_ind defaults to equal_var=True and "
+        "rejects 44% of the time under a true null at n=(10,100), sd=(4,1). "
+        "strict=True so that if scipy ever changes this default the test starts "
+        "passing and CI fails, forcing the case to be rewritten -- a corpus "
+        "about silent staleness must not go stale silently."
+    ),
+)
 def test_scipy_default_ttest_holds_its_nominal_size() -> None:
     """The claim, gated. Expected to fail: that is the finding, not a defect here.
 
@@ -91,7 +115,7 @@ def test_scipy_default_ttest_holds_its_nominal_size() -> None:
     claim held, so the failure message carries the measured rate.
     """
     assert_count_rate(
-        rejections(10, 100, 4.0, 1.0, equal_var=True),
+        rejections(10, 100, 4.0, 1.0),
         REPS,
         ALPHA,
         label="scipy default, n=(10,100) sd=(4,1)",

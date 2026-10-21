@@ -105,7 +105,7 @@ promise. What the measurement adds is how slowly it arrives:
 
 Effective n is `T(1-rho)/(1+rho)`, the independent-observation equivalent. At four
 thousand observations the interval is still four and a half points short. This is
-the known finite-sample behaviour of kernel HAC estimators (Andrews 1991;
+the known finite-sample behavior of kernel HAC estimators (Andrews 1991;
 Kiefer and Vogelsang 2002), not news to that literature — but it is a long way
 from what a thousand-observation time series feels like it should give you, and
 neither the docs nor the lag rule say so.

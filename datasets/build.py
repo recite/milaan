@@ -3,7 +3,7 @@
 Datasets are shared rather than generated per comparison, so two specs about the
 same procedure are measured on the same numbers and their results can be read
 side by side. They are also small and deterministic -- no RNG anywhere, since a
-catalogue about reproducibility that could not reproduce its own inputs would be
+catalog about reproducibility that could not reproduce its own inputs would be
 a poor advertisement.
 
 Each is chosen to make a disagreement *visible*, not to be realistic. Eight

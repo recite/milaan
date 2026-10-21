@@ -9,7 +9,7 @@ proportion_confint(0, 20)  # -> (0.0, 0.0)
 ```
 
 Zero successes in twenty trials, and the default 95% interval is a point. Not a
-wide interval, not a badly centred one: it asserts that the proportion is
+wide interval, not a badly centered one: it asserts that the proportion is
 exactly zero, with 95% confidence, from twenty observations. Nothing warns.
 
 R, asked the same question:
@@ -92,7 +92,7 @@ advises against.
 n = 20, up to 0.920 at n = 50, then back *down* to 0.877 at n = 100. Coverage
 oscillates with n rather than climbing, so there is no sample size past which a
 user can stop worrying, and no warning threshold that would be honest to add.
-"n is large enough" is not a defence available here.
+"n is large enough" is not a defense available here.
 
 ## Why this one is worth probing at all
 

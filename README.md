@@ -2,7 +2,7 @@
 
 **मिलान** — tallying, matching, reconciliation.
 
-Does R agree with Python? A measured catalogue of where equivalent-looking
+Does R agree with Python? A measured catalog of where equivalent-looking
 statistical calls disagree, by how much, why, and what it takes to make them
 agree.
 
@@ -21,7 +21,7 @@ Every number below was measured by running the thing, not predicted.
 |---|---|
 | `sd(x)` and `np.std(x)` differ on **every vector** | numpy divides by `n`, R by `n-1`; `1.534135400990` against `1.435052263857` |
 | `t.test` and `ttest_ind` have **opposite defaults** | R is Welch, scipy is Student pooled |
-| `scale()` and `StandardScaler` disagree by the same factor | the `ddof` gap, propagated into every standardised regressor |
+| `scale()` and `StandardScaler` disagree by the same factor | the `ddof` gap, propagated into every standardized regressor |
 | R and Python's Newey–West standard errors differ **7×** out of the box | neither is wrong; R prewhitens and auto-selects bandwidth, statsmodels does neither |
 | `sklearn.LogisticRegression()` silently applies L2 at `C=1.0` | its "unpenalized" coefficient is a function of `tol`, not of the data |
 | R's `glm` reports **p = 0.9995** where Firth reports **p = 0.0011** | separated data; the Wald statistic collapses as the standard error diverges |
@@ -60,7 +60,7 @@ Python` puts the whole top ten in `numpy.random`.
 Those names are not ten things to test. `randn`, `standard_normal`, `normal(0,1)`
 and a `RandomState` object draw from one Mersenne-Twister state in one order, as
 do `rand`, `random` and `uniform(0,1)` — measured byte-identical in
-`numpy_rng_aliases`, which is what stops the finding below from being an artefact
+`numpy_rng_aliases`, which is what stops the finding below from being an artifact
 of which API happened to be picked.
 
 Seeded streams differ across languages by construction. `set.seed(42)` in R and
@@ -230,4 +230,4 @@ conditioning, or missingness.
 The reference is R, which encodes an assumption rather than a judgment about
 quality: most of the replication corpus is R, so "can Python reproduce this" is
 the question people actually face. Where Python is the better implementation, the
-catalogue says so in the `cause` field.
+catalog says so in the `cause` field.

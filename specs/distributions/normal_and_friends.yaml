@@ -28,7 +28,7 @@ finding:
   reconcilable: true
   reconciliation: "nothing to do; the naming differs (p/q prefix versus .cdf/.ppf) and the mathematics does not"
   note: >
-    The foundation everything else rests on. Every p-value in this catalogue is
+    The foundation everything else rests on. Every p-value in this catalog is
     ultimately a tail probability, so if these disagreed the disagreement would
     contaminate every hypothesis-test comparison and be impossible to attribute.
     They agree to fourteen digits, which means a p-value that differs between the

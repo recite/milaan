@@ -1,0 +1,64 @@
+name: CI
+
+# This repository had no workflows at all until now, so its 112 tests -- and
+# the findings under cases/ and probes/, which kasauti depends on via a path
+# dependency -- had never run anywhere but a laptop.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "23 6 * * 1"  # weekly: surface ecosystem drift on a quiet repo
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: gojiplus/py-canon/.github/workflows/reusable-ci.yml@v1
+    with:
+      python-versions: '["3.11", "3.12", "3.13"]'
+      os: '["ubuntu-latest"]'
+      wheel-import: milaan
+      coverage-floor: 0
+      # This research corpus has not adopted the py-canon package template.
+      # Ruff, Pyright, pydoclint, tests, and wheel validation still run.
+      run-preen: false
+
+  # Python gates recheck the committed per-replicate R results. Regenerating
+  # the long simulations requires a separately registered run; this job checks
+  # the companion source for syntax errors without changing that evidence.
+  r-parse:
+    name: R companions parse
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          use-public-rspm: true
+
+      - name: Parse every committed R script
+        run: |
+          set -euo pipefail
+          found=0
+          while IFS= read -r -d '' f; do
+            found=$((found + 1))
+            echo "::group::$f"
+            Rscript --vanilla -e 'invisible(parse(commandArgs(TRUE)[1]))' "$f"
+            echo "::endgroup::"
+          done < <(find cases probes -name '*.R' -print0)
+          echo "parsed $found R scripts"
+          # A run that parses nothing is a green check that proves nothing --
+          # the failure mode this whole repository exists to document.
+          test "$found" -gt 0

@@ -58,7 +58,7 @@ dangerous. A user who fits `LogisticRegression()` on separated data gets a
 publishable-looking coefficient for a model they did not specify, with no warning,
 no standard error, and nothing to suggest the MLE does not exist.
 
-(As of scikit-learn 1.8 the `penalty` argument is deprecated in favour of
+(As of scikit-learn 1.8 the `penalty` argument is deprecated in favor of
 `l1_ratio` and `C`, and is slated for removal in 1.10. The unpenalized fit is
 becoming harder to ask for, not easier.)
 

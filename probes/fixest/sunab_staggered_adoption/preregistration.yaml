@@ -1,0 +1,128 @@
+# Committed before the probe runs. See ../../PROTOCOL.md §2.
+id: fixest/sunab_staggered_adoption
+tier: B
+role: target
+
+target:
+  package: fixest
+  version_at_registration: "0.14.2"
+  entrypoint: "feols(y ~ sunab(cohort, period) | unit + period); summary(m, agg = 'att')"
+  method_year: 2021
+
+usage_evidence: >
+  sunab() is not a separate row in data/sampling_frame.csv, but its host is:
+  feols is rank 79 with 117 scripts and 1054 calls. sunab is one of the small
+  number of implementations of the Sun & Abraham correction, and it is the one
+  reachable without leaving fixest, which is where staggered-adoption panels are
+  already being fitted.
+
+claim:
+  quote: >
+    "we propose an interaction-weighted estimator that is consistent for the
+    ATT ... under treatment effect heterogeneity", and its variance estimator
+    "is consistent, so that inference is asymptotically valid"
+  source: >
+    Sun & Abraham (2021), "Estimating dynamic treatment effects in event studies
+    with heterogeneous treatment effects", Journal of Econometrics 225(2).
+  operationalised: >
+    Two separate claims, gated separately.
+    (a) The aggregated ATT from summary(m, agg = "att") is unbiased for the
+        average treatment effect on the treated over the cells the estimator
+        targets.
+    (b) Its 95% confidence interval contains that estimand 95% of the time.
+
+dgp:
+  description: >
+    Staggered adoption with dynamic, strictly positive treatment effects that
+    grow with time since adoption -- the design under which the two-way fixed
+    effects coefficient was already measured to fail (see ../../FINDINGS.md).
+    Unit and period fixed effects, idiosyncratic noise.
+  truth: "computed per replicate; see estimand_hazard"
+  parameters:
+    growth_per_period: 1.0
+    noise_sd: 0.5
+  variants:
+    - name: with_never_treated
+      cohorts: "three adopting cohorts plus a never-treated group"
+    - name: without_never_treated
+      cohorts: "three adopting cohorts, everyone eventually treated"
+
+# Named because getting it wrong would manufacture a finding out of nothing.
+estimand_hazard:
+  problem: >
+    sunab's agg="att" averages cohort-by-relative-period effects over the cells
+    the interaction-weighted estimator actually uses, which is not the same set
+    as "every treated observation". Computing the truth as the mean effect over
+    all treated cells and comparing it to that aggregate would measure an
+    estimand mismatch and report it as bias.
+  resolution: >
+    The truth is computed over the same (cohort, relative period) cells the
+    estimator weights, with the same weights, read from the fitted object rather
+    than assumed. The probe asserts the two cell sets match before comparing.
+  executable: true
+
+assumptions:
+  - condition: "no anticipation -- treatment has no effect before adoption"
+    satisfied_by: "tau is exactly zero for all relative periods below zero"
+    executable: true
+  - condition: "parallel trends across cohorts in the absence of treatment"
+    satisfied_by: "untreated potential outcomes are unit FE + period FE + noise, with no cohort-specific trend"
+    executable: true
+  - condition: "treatment is absorbing -- units do not revert"
+    satisfied_by: "treatment indicator is 1{period >= adopt}, monotone in period"
+    executable: true
+  - condition: "treatment effects may be heterogeneous across cohorts and time"
+    satisfied_by: "effects grow with time since adoption, which is the heterogeneity the method exists for"
+    executable: false
+
+instrument_sensitivity:
+  requirement: >
+    Two-way fixed effects on the identical replicates must be badly biased --
+    the failure the method exists to fix must be present in this data. Recorded
+    as a third arm from the same run.
+  if_unmet: "UNINFORMATIVE, not HOLDS. Re-register with stronger staggering."
+  note: >
+    Already measured on this design at exploration time: TWFE recovered 2.300
+    against a truth of 4.875 with a never-treated group, and 0.025 without one,
+    with the sign wrong 35% of the time. The condition is expected to be met
+    comfortably; it is registered anyway so the check is in the run rather than
+    in my memory.
+
+sweep:
+  n_units: [40, 80, 200]
+
+study:
+  reps: 1000
+  seed: 20260808
+  gates:
+    - "simcheck.assert_unbiased(result)"
+    - "simcheck.assert_coverage(result, 0.95)"
+  arms_recorded:
+    - "sunab ATT, default SE"
+    - "sunab ATT, cluster by unit"
+    - "TWFE coefficient (sensitivity check only)"
+  also_reported: "mean interval width for both sunab SE variants"
+
+# Registered as a suspicion, so that confirming it later is not hindsight.
+secondary_question:
+  detail: >
+    fixest 0.14.2 defaults to IID standard errors for all estimations (see
+    ../../FINDINGS.md). A one-off fit during API verification confirmed the
+    sunab aggregate reports vcov_type "IID". On a staggered panel with
+    within-unit correlation that is unlikely to be right, so the probe records
+    the clustered variant alongside and reports both. If the point estimate is
+    unbiased while the default interval under-covers, the honest headline is
+    that the fix for the TWFE bias is served with inference that does not hold.
+
+prediction:
+  verdict: SLOW
+  detail: >
+    Unbiasedness expected to HOLD at every n -- that is the part of the method
+    that is a theorem about weights rather than an asymptotic approximation.
+    Coverage with clustered SEs expected to hold by n = 80 and possibly to
+    under-cover at n = 40, where the number of clusters is small. Coverage with
+    the DEFAULT IID SE expected to under-cover at every n.
+  falsifier: >
+    For (a): bias more than 3 Monte Carlo standard errors from zero at any n
+    with the estimand check passing. For (b): clustered coverage outside the
+    band on the low side at n >= 80.

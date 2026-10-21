@@ -31,12 +31,12 @@ finding:
   reconcilable: true
   reconciliation: "nothing to do, except remember add_constant -- statsmodels fits no intercept unless you give it one"
   note: >
-    The most important negative in the catalogue. `lm` is the second most-called
+    The most important negative in the catalog. `lm` is the second most-called
     procedure in the R corpus at 643 scripts, and everything a regression table
     reports -- both coefficients, both standard errors, R-squared and the
     F-statistic -- is identical to twelve digits. Ordinary least squares ports
     cleanly, and it is worth saying so plainly, because the disagreements
-    elsewhere in this catalogue could otherwise leave the impression that nothing
+    elsewhere in this catalog could otherwise leave the impression that nothing
     does.
 
     The one trap has nothing to do with arithmetic: R's formula interface adds an

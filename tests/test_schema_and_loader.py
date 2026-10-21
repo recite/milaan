@@ -1,6 +1,7 @@
 """Result serialization and `case.yaml` parsing."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -143,9 +144,8 @@ def test_repository_cases_all_parse():
     """Every case shipped in this repo must load and declare a reason for
     each expected divergence. Guards against a malformed case landing.
     """
-    from milaan.cli import ROOT
-
-    cases = discover_cases(ROOT / "cases")
+    root = Path(__file__).resolve().parents[1]
+    cases = discover_cases(root / "cases")
     assert cases, "no cases discovered"
     for case in cases:
         for name, quantity in case.quantities.items():

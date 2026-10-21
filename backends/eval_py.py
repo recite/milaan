@@ -125,9 +125,7 @@ def main() -> None:
                 if len(values) == 1
                 else {str(i + 1): v for i, v in enumerate(values)}
             )
-        quantities = {
-            ("value" if not k else f"value.{k}"): v for k, v in named.items()
-        }
+        quantities = {("value" if not k else f"value.{k}"): v for k, v in named.items()}
         return {
             "quantities": quantities,
             "diagnostics": {"expr": expr, "n": len(quantities)},

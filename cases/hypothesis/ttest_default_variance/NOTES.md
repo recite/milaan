@@ -56,7 +56,7 @@ Hold the small group at ten and add observations only to the large one:
 The size does not converge to 0.05. It converges to about 0.60. Collecting more
 data in the group that is cheap to sample — which is the usual reason group
 sizes end up unequal — moves the false-positive rate *up*, monotonically. This
-is the part that makes it dangerous in practice: the usual defence, that
+is the part that makes it dangerous in practice: the usual defense, that
 asymptotics will sort it out, runs the wrong way here.
 
 ## The estimator is not in dispute
