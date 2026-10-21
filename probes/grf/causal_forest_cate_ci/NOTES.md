@@ -25,6 +25,14 @@ different `x` within a replicate are dependent, so they are not pooled):
 3-sigma bands: `[0.9269, 0.9731]` at 800 reps, `[0.9173, 0.9827]` at 400,
 `[0.8903, 1.0000]` at 120.
 
+Mean interval widths, calculated as `2 * 1.959964 * se` for each replicate:
+
+| n | x1=0.1 | x1=0.3 | x1=0.5 | x1=0.7 | x1=0.9 | ATE |
+|---|---|---|---|---|---|---|
+| 500 | 0.441 | 0.440 | 0.563 | 0.446 | 0.446 | 0.214 |
+| 2000 | 0.281 | 0.301 | 0.353 | 0.309 | 0.284 | 0.103 |
+| 4000 | 0.227 | 0.256 | 0.275 | 0.258 | 0.235 | 0.073 |
+
 ## The interior is fine; the boundary is not
 
 Every interior point — x1 = 0.3, 0.5, 0.7 — sits inside the band at every
@@ -49,10 +57,10 @@ sampling error alone. That is why coverage is 0.63.
 
 ## Why `SLOW` rather than `FAILS`
 
-Boundary coverage climbs 0.631 → 0.875 → 0.917, and the bias falls at roughly
-`n^-0.85` then `n^-0.92` — close to `1/n` and faster than the standard error's
-`1/√n`, which is precisely the condition the asymptotic theory needs. The
-guarantee is arriving; it is simply not there at n = 500.
+Boundary coverage climbs 0.631 → 0.875 → 0.917 while bias and interval width
+both fall. That direction supports the registered `SLOW` interpretation for
+this sweep. Three finite sample sizes do not establish an asymptotic rate or
+prove that coverage will reach nominal at larger sizes.
 
 Two honest caveats on the largest cell:
 

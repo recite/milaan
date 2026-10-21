@@ -166,6 +166,7 @@ if __name__ == "__main__":
     print(
         f"\n{'units':>6}{'sd(est)':>10}{'SE default':>12}{'SE cluster':>12}"
         f"{'cov default':>13}{'cov cluster':>13}"
+        f"{'width default':>15}{'width cluster':>15}"
     )
     for n in data["grid"]:
         rows = rows_for(data, n)
@@ -175,6 +176,8 @@ if __name__ == "__main__":
             f"{np.mean([r['se_cluster'] for r in rows]):>12.4f}"
             f"{cell(data, n, 'default').coverage:>13.3f}"
             f"{cell(data, n, 'cluster').coverage:>13.3f}"
+            f"{2 * Z * np.mean([r['se_default'] for r in rows]):>15.4f}"
+            f"{2 * Z * np.mean([r['se_cluster'] for r in rows]):>15.4f}"
         )
     low, high = binomial_band(data["level"], data["reps_per_cell"])
     print(f"\nsimcheck 3-sigma band: [{low:.4f}, {high:.4f}]")

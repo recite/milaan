@@ -207,6 +207,19 @@ if __name__ == "__main__":
             + f"{ate_cell(data, n).coverage:>10.3f}"
         )
 
+    print("\nMean interval widths")
+    print(head + f"{'ATE':>10}")
+    for spec in data["plan"]:
+        n = spec["n"]
+        rows = rows_for(data, n)
+        widths = 2 * Z * np.mean([r["se"] for r in rows], axis=0)
+        ate_width = 2 * Z * float(np.mean([r["ate_se"] for r in rows]))
+        print(
+            f"{n:>6}{len(rows):>6}"
+            + "".join(f"{width:>10.3f}" for width in widths)
+            + f"{ate_width:>10.3f}"
+        )
+
     print(f"\n{'n':>6}  3-sigma band at that cell's replicate count")
     for spec in data["plan"]:
         low, high = binomial_band(data["level"], len(rows_for(data, spec["n"])))

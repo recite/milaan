@@ -9,8 +9,8 @@ the point of this note.
 `../../FINDINGS.md` records that under staggered adoption with dynamic effects,
 the two-way fixed effects coefficient recovers 0.025 against a truth of 4.875
 and has the wrong sign 35% of the time. Sun & Abraham (2021) is what applied
-researchers are told to use instead. Nobody had publicly asked whether the
-replacement's *inference* works.
+researchers are told to use instead. This probe checks its inference in the
+registered design; it does not establish a claim of novelty.
 
 ## What was measured
 
@@ -36,6 +36,14 @@ simcheck's 3-sigma band at 1000 replicates: **[0.9293, 0.9707]**.
 Unbiased to three decimal places at every panel size, and the reported standard
 error matches the actual sampling spread. Coverage is inside the band in all six
 cells.
+
+Mean interval widths (`2 * 1.959964 * se`), from the same replicates:
+
+| units | width default | width cluster |
+|---|---|---|
+| 40 | 0.5827 | 0.5815 |
+| 80 | 0.4135 | 0.4132 |
+| 200 | 0.2613 | 0.2614 |
 
 ## Two checks had to pass before any of that counted
 
