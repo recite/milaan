@@ -112,6 +112,6 @@ check-return-types = false
 exclude = '\.venv|tests'
 
 [tool.codespell]
-# R package names.
-ignore-words-list = "aer"
+# aer is an R package; TTEST is a constant in tests/test_finding_gates.py.
+ignore-words-list = "aer,ttest"
 builtin = "clear,rare,en-GB_to_en-US"
